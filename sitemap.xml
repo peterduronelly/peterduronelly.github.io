@@ -4,6 +4,14 @@
     
     <url>
     
+      <loc>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</loc>
+      <lastmod>2018-09-13T13:39:08+02:00</lastmod>
+    </url>
+    
+  
+    
+    <url>
+    
       <loc>https://peterduronelly.github.io/post/sparse-matrices-in-python/</loc>
       <lastmod>2018-09-13T11:17:13+02:00</lastmod>
     </url>
@@ -69,6 +77,15 @@
     
     <url>
     
+      <loc>https://peterduronelly.github.io/tags/r/</loc>
+      <lastmod>2018-09-13T13:39:08+02:00</lastmod>
+      <priority>0</priority>
+    </url>
+    
+  
+    
+    <url>
+    
       <loc>https://peterduronelly.github.io/tags/scipy/</loc>
       <lastmod>2018-09-13T11:17:13+02:00</lastmod>
       <priority>0</priority>
@@ -87,8 +104,26 @@
     
     <url>
     
+      <loc>https://peterduronelly.github.io/tags/tidytext/</loc>
+      <lastmod>2018-09-13T13:39:08+02:00</lastmod>
+      <priority>0</priority>
+    </url>
+    
+  
+    
+    <url>
+    
       <loc>https://peterduronelly.github.io/</loc>
       <lastmod>2017-10-15T00:00:00+02:00</lastmod>
+      <priority>0</priority>
+    </url>
+    
+  
+    
+    <url>
+    
+      <loc>https://peterduronelly.github.io/tags/unstructured-text-data/</loc>
+      <lastmod>2018-09-13T13:39:08+02:00</lastmod>
       <priority>0</priority>
     </url>
     

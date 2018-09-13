@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 2.4.0">
+  <meta name="generator" content="Hugo 0.48" />
+  <meta name="author" content="Peter Duronelly">
+
+  
+  
+  
+  
+    
+  
+  <meta name="description" content="The Beatles became hit through its powerful music but it is not famous for its poetry. But the group&rsquo;s lyrics did change during the band&rsquo;s short existence and we can use text analysis to track these changes. This post is about measuring the change in the complexity of the group&rsquo;s lyrics, from Please, Please Me to Abbey Road, showing how we can use basic data secience tools to find really fancy patterns in unstructured text data.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/">
+
+  
+
+
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#0095eb">
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha512-6MXa8B6uaO18Hid6blRMetEIoPqHf7Ux1tnyIQdpt9qI5OACx7C+O3IVTr98vwGnlcg0LOLa02i9Y1HpVhlfiw==" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" integrity="sha256-ygkqlh3CYSUri3LhQxzdcm0n1EQvH2Y+U5S2idbLtxs=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" crossorigin="anonymous">
+        
+      
+    
+
+    
+
+    
+
+  
+
+  
+  
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat:400,700%7cRoboto:400,400italic,700%7cRoboto&#43;Mono">
+  
+
+  <link rel="stylesheet" href="/styles.css">
+  
+
+  
+  
+  
+
+  
+  <link rel="alternate" href="https://peterduronelly.github.io/index.xml" type="application/rss+xml" title="Tiny Little Things in Data Science">
+  <link rel="feed" href="https://peterduronelly.github.io/index.xml" type="application/rss+xml" title="Tiny Little Things in Data Science">
+  
+
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/png" href="/img/icon.png">
+  <link rel="apple-touch-icon" type="image/png" href="/img/icon-192.png">
+
+  <link rel="canonical" href="https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/">
+
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="Tiny Little Things in Data Science">
+  <meta property="og:url" content="https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/">
+  <meta property="og:title" content="Text Complexity Analysis of Beatles Lyrics With R | Tiny Little Things in Data Science">
+  <meta property="og:description" content="The Beatles became hit through its powerful music but it is not famous for its poetry. But the group&rsquo;s lyrics did change during the band&rsquo;s short existence and we can use text analysis to track these changes. This post is about measuring the change in the complexity of the group&rsquo;s lyrics, from Please, Please Me to Abbey Road, showing how we can use basic data secience tools to find really fancy patterns in unstructured text data.">
+  <meta property="og:locale" content="en-us">
+  
+  <meta property="article:published_time" content="2018-09-13T13:39:08&#43;02:00">
+  
+  <meta property="article:modified_time" content="2018-09-13T13:39:08&#43;02:00">
+  
+
+  
+
+  
+
+  <title>Text Complexity Analysis of Beatles Lyrics With R | Tiny Little Things in Data Science</title>
+
+</head>
+<body id="top" data-spy="scroll" data-target="#toc" data-offset="71" >
+
+<nav class="navbar navbar-default navbar-fixed-top" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="navbar-header">
+      
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+              data-target=".navbar-collapse" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+      <a class="navbar-brand" href="/">Tiny Little Things in Data Science</a>
+    </div>
+
+    
+    <div class="collapse navbar-collapse">
+
+      
+      
+      <ul class="nav navbar-nav navbar-right">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#about">
+            
+            <span>Home</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#posts">
+            
+            <span>Posts</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#contact">
+            
+            <span>Contact</span>
+            
+          </a>
+        </li>
+
+        
+        
+      
+
+      
+      </ul>
+
+    </div>
+  </div>
+</nav>
+
+
+<article class="article" itemscope itemtype="http://schema.org/Article">
+
+  
+
+
+  <div class="article-container">
+    <h1 itemprop="name">Text Complexity Analysis of Beatles Lyrics With R</h1>
+
+    
+
+<div class="article-metadata">
+
+  
+  
+  
+  <div>
+    
+    <span itemscope itemprop="author" itemtype="http://schema.org/Person">
+      <span itemprop="name">Peter Duronelly</span>
+    </span>
+    
+  </div>
+  
+
+  <span class="article-date">
+    
+    <meta content="2018-09-13 13:39:08 &#43;0200 CEST" itemprop="datePublished">
+    <time datetime="2018-09-13 13:39:08 &#43;0200 CEST" itemprop="dateModified">
+      Sep 13, 2018
+    </time>
+  </span>
+  <span itemscope itemprop="publisher" itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Peter Duronelly">
+  </span>
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    12 min read
+  </span>
+  
+
+  
+  
+
+  
+  
+  
+  
+
+  
+  
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    <li>
+      <a class="twitter"
+         href="https://twitter.com/intent/tweet?text=Text%20Complexity%20Analysis%20of%20Beatles%20Lyrics%20With%20R&amp;url=https%3a%2f%2fpeterduronelly.github.io%2fpost%2ftext-complexity-analysis-of-beatles-lyrics-with-r%2f"
+         target="_blank" rel="noopener">
+        <i class="fab fa-twitter"></i>
+      </a>
+    </li>
+    <li>
+      <a class="facebook"
+         href="https://www.facebook.com/sharer.php?u=https%3a%2f%2fpeterduronelly.github.io%2fpost%2ftext-complexity-analysis-of-beatles-lyrics-with-r%2f"
+         target="_blank" rel="noopener">
+        <i class="fab fa-facebook-f"></i>
+      </a>
+    </li>
+    <li>
+      <a class="linkedin"
+         href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fpeterduronelly.github.io%2fpost%2ftext-complexity-analysis-of-beatles-lyrics-with-r%2f&amp;title=Text%20Complexity%20Analysis%20of%20Beatles%20Lyrics%20With%20R"
+         target="_blank" rel="noopener">
+        <i class="fab fa-linkedin-in"></i>
+      </a>
+    </li>
+    <li>
+      <a class="weibo"
+         href="http://service.weibo.com/share/share.php?url=https%3a%2f%2fpeterduronelly.github.io%2fpost%2ftext-complexity-analysis-of-beatles-lyrics-with-r%2f&amp;title=Text%20Complexity%20Analysis%20of%20Beatles%20Lyrics%20With%20R"
+         target="_blank" rel="noopener">
+        <i class="fab fa-weibo"></i>
+      </a>
+    </li>
+    <li>
+      <a class="email"
+         href="mailto:?subject=Text%20Complexity%20Analysis%20of%20Beatles%20Lyrics%20With%20R&amp;body=https%3a%2f%2fpeterduronelly.github.io%2fpost%2ftext-complexity-analysis-of-beatles-lyrics-with-r%2f">
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+  
+
+</div>
+
+
+    <div class="article-style" itemprop="articleBody">
+      
+
+<p>The Beatles became hit through its powerful music but it is not famous for its poetry. But the group&rsquo;s
+lyrics did change during the band&rsquo;s short existence and we can use text analysis to track these changes.
+This post is about measuring the change in the complexity of the group&rsquo;s lyrics, from Please, Please Me
+to Abbey Road, showing how we can use basic data secience tools to find really fancy patterns in unstructured
+text data.</p>
+
+<p>This piece is a shortened version of a final project for a Data Science
+on Unstructured Text Data course held by Facebook&rsquo;s Eduardo Ariño de la
+Rubia. The course introduced the tidytext package and the basics of text
+analysis in R. At the end of the course students had to present their
+skills through a freely chosen analysis project. Although tidytext does
+not directly cover text complexity, to me it was somehow an obvious
+choice.</p>
+
+<p>This is a technical post, but most of the hard stuff is concentrated in the
+code blocks. If you are only interested in the power of data science, feel free
+to disregard these blocks and concentrate on the text and the plots only. You
+will still be able to get the message.</p>
+
+<p>When you learn English as a foreign language you inevitably bump into
+The Beatles early on. The songs are well known, and even a beginner
+student can easily understand the lyrics. This is not only because the
+members were singing in nice English, but because their early text is
+damned simple. &lsquo;She loves you, yeah, yeah, yeah.&rsquo; Not that of a
+challenging text, right?</p>
+
+<p>But when you listen to The Beatles a little more, you realize that as
+time went by their songs got more and more sophisticated. &lsquo;Strawberry
+Fields Forever&rsquo; does have more depth than &lsquo;A Hard Day&rsquo;s Night&rsquo;. Since we
+are into data science, it is obvious to ask: can we measure this change
+in sophistication? Can we trace the development also in their lyrics? As
+the members went from their early twenties towards their thirties, did
+they move from their simple but powerful origins towards something more
+mature?</p>
+
+<p>In the next few lines I am analyzing The Beatles&rsquo; thirteen albums of
+&lsquo;core catalogues&rsquo; from &lsquo;Please Please Me&rsquo; to &lsquo;Let It Be&rsquo;, published
+between 1964 and 1970. It is amazing but the most influential pop group
+of all times existed for less than a decade, and this short period was
+enough to issue thirteen albums and to turn the world upside down. The
+group had quite a few extra collections, live recordings and greatest
+hit compilations (the last one, according to wikipedia, in 2013), but
+these thirteen albums make up the the actual works of the group.</p>
+
+<p>For the project I used the newly developed <a href="https://github.com/JosiahParry/geniusR" target="_blank">geniusR package</a> by Josiah Parry, which downloads lyrics and
+metadata from the genius.com homepage. This package was of enormous help
+for the analysis.
+<br><br></p>
+
+<h2 id="a-glance-at-the-beatles">A Glance At The Beatles</h2>
+
+<p>As a starter I imported the necessary packages. I like starting all
+analysis with the packages, having them in one single chunk for a better
+overview. Also, when I later need to add further packages I just scroll
+back to the first chunk to enter the extra library command.</p>
+
+<pre><code class="language-.r">library(geniusR)
+library(tidyverse)
+library(tidytext)
+library(tidyr)
+library(tibble)
+library(dplyr)
+library(purrr)
+library(stringr)
+library(syllable)
+library(ggplot2)
+library(scales)
+library(gridExtra)
+library(lsa)
+library(rlist)
+library(data.table)
+</code></pre>
+
+<p>Downloading the text is simple with geniusR: you define the artist, the
+number of albums to download, and the album titles. Album titles should
+be entered as the last part of the urls on the genius.com webpage
+without hyphens. Apostrophes are omitted. You can also download albums
+of multiple artists entering the author, # of albums multiple
+times as a vector. See the documentation and Josiah&rsquo;s github for
+details.</p>
+
+<p>It takes a while until your text downloads, but you end up with a nice
+(tidy!) tibble which serves as the basis for further analysis.</p>
+
+<pre><code class="language-.r">albums &lt;-  tibble(
+  artist = 
+    rep(&quot;The Beatles&quot;, 13),
+  album = c(
+    &quot;Please Please Me&quot;, &quot;With The Beatles&quot;, &quot;A Hard Day s Night&quot;,
+    &quot;Beatles For Sale&quot;, &quot;Help&quot;, &quot;Rubber Soul&quot;,
+    &quot;Revolver&quot;, &quot;Sgt Pepper s Lonely Hearts Club Band&quot;, &quot;Magical Mystery Tour&quot;,
+    &quot;The Beatles The White Album&quot;, &quot;Yellow Submarine&quot;, &quot;Abbey Road&quot;,
+    &quot;Let It Be&quot;
+  )
+)
+
+album_lyrics &lt;- albums %&gt;% 
+  mutate(tracks = map2(artist, album, genius_album))
+
+beatles_lyrics &lt;- album_lyrics %&gt;% 
+  unnest(tracks) 
+
+beatles_albums &lt;- beatles_lyrics %&gt;%
+  distinct(album)
+</code></pre>
+
+<p>As the most obvious starting point of any text analysis, I checked the
+per album frequencies of non-stop words across these albums. (For the wider
+audience: <a href="https://en.wikipedia.org/wiki/Stop_words" target="_blank">stop words</a> are the most common, &lsquo;functional&rsquo; words in a language.) In order to
+draw an arch of change, I plotted simple word frequency charts for
+Please Please Me (1963), Help (1965), Magical Mystery Tour (1967) and
+Let It Be (1970). Can we see any difference in the words used?</p>
+
+<pre><code class="language-.r">tidy_beatles &lt;- beatles_lyrics %&gt;%
+  unnest_tokens(word, text) %&gt;%
+  filter(nchar(word)&gt;2)%&gt;%
+  anti_join(stop_words) %&gt;%
+  group_by(album) %&gt;%
+  count(word, sort = TRUE) %&gt;%
+  ungroup()
+
+total_words &lt;- tidy_beatles %&gt;% 
+  group_by(album) %&gt;% 
+  summarize(total = sum(n))
+
+tidy_beatles &lt;- left_join(tidy_beatles, total_words)
+
+tidy_beatles &lt;- tidy_beatles %&gt;%
+  mutate(freq = n / total)
+  
+ppm &lt;- tidy_beatles %&gt;%
+  filter(str_detect(album, &quot;Please&quot;))%&gt;%
+  arrange(desc(freq)) %&gt;%
+  top_n(10)%&gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&gt;% 
+  ggplot(aes(word, freq, fill=I(&quot;steelblue3&quot;), col=I(&quot;black&quot;))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = &quot;frequency&quot;) +
+  coord_flip() + 
+  theme_bw() + 
+  labs(title = &quot;Word frequency in Please Please Me&quot;) + 
+  theme(plot.title = element_text(size = rel(1))) +
+  scale_y_continuous(labels = percent)
+
+help &lt;- tidy_beatles %&gt;%
+  filter(str_detect(album, &quot;Help&quot;))%&gt;%
+  arrange(desc(freq)) %&gt;%
+  top_n(10)%&gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&gt;% 
+  ggplot(aes(word, freq, fill=I(&quot;steelblue3&quot;), col=I(&quot;black&quot;))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = &quot;frequency&quot;) +
+  coord_flip() + 
+  theme_bw() + 
+  labs(title = &quot;Word frequency in Help&quot;) + 
+  theme(plot.title = element_text(size = rel(1))) +
+  scale_y_continuous(labels = percent)
+
+mys &lt;- tidy_beatles %&gt;%
+  filter(str_detect(album, &quot;Mystery&quot;))%&gt;%
+  arrange(desc(freq)) %&gt;%
+  top_n(10)%&gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&gt;% 
+  ggplot(aes(word, freq, fill=I(&quot;steelblue3&quot;), col=I(&quot;black&quot;))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = &quot;frequency&quot;) +
+  coord_flip() + 
+  theme_bw() + 
+  labs(title = &quot;Word frequency in Magical Myster Tour&quot;) + 
+  theme(plot.title = element_text(size = rel(1))) +
+  scale_y_continuous(labels = percent)
+
+lib &lt;- tidy_beatles %&gt;%
+  filter(str_detect(album, &quot;Let&quot;))%&gt;%
+  arrange(desc(freq)) %&gt;%
+  top_n(10)%&gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&gt;% 
+  ggplot(aes(word, freq, fill=I(&quot;steelblue3&quot;), col=I(&quot;black&quot;))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = &quot;frequency&quot;) +
+  coord_flip() + 
+  theme_bw() + 
+  labs(title = &quot;Word frequency in Let It Be&quot;) + 
+  theme(plot.title = element_text(size = rel(1))) +
+  scale_y_continuous(labels = percent)
+
+grid.arrange(ppm, help, mys, lib, nrow = 2)
+</code></pre>
+
+<p><img src="/img/02_beatles_01_resize.jpg" alt="alt text" /></p>
+
+<p>Love makes it into the first 10 in three of the albums, leading the pack
+in Please Please Me and, to my little surprise, Magical Mystery Tour.
+Interestingly, it is missing from the top 10 in Let It Be, the last
+album. It looks, love was not of primary interest by 1970, the year when
+the members decided to go their own separate ways. Of course, per album
+word frequency depends largely on the songs&rsquo; topic selection: &lsquo;mother&rsquo;
+goes to number 2 in Magical Mystery Tour due to the many repetitions of
+the line &lsquo;Your mother should know&rsquo; in the song of the same title.</p>
+
+<p>This simple exercise shows that working with lyrics can be very tricky.
+Lines are repeated very often, and melody dominates sentence building.
+As a matter of fact, sentences can only be poorly defined by regular
+text analysis algorithms in songs, which, as we will see later, makes
+measuring text complexity somewhat difficult.
+<br><br></p>
+
+<h2 id="measuring-similarity-across-core-albums">Measuring Similarity Across Core Albums</h2>
+
+<p>In order to asses how much the group changed over the course of these
+seven years I measured the similarity of each album to Please Please Me,
+the very first LP. More and more sophisticated lyrics would result in
+larger and larger differences in text, measured by cosine similarity.</p>
+
+<p>I calculated cosine similarity based on word frequency vectors, where
+each album is vector of frequencies of words in a union of sets of words
+from each album. The word list is a product of a full join of all words
+from the all the albums, and the cosine for each album is a similarity
+measure between that particular album and the benchmark Please Please
+Me. This word list excludes stop words, of course.</p>
+
+<pre><code class="language-.r">cos &lt;- tidy_beatles %&gt;%
+  select(album, word, freq)
+
+cos_w &lt;- spread(cos, key = album, value = freq) # This is a matrix where entries are frequencies of words in the the various albums. NAs are replaced by zeros in the next command. 
+
+cos_w[is.na(cos_w)] &lt;- 0
+
+cos_w &lt;- cos_w %&gt;%
+  select(-word)
+
+title &lt;- beatles_albums[[1]][1]
+a &lt;- cos_w %&gt;% select(as.character(title))
+
+
+cosines &lt;- data.table(album = character(),
+                      cosines = numeric())
+
+for(i in 2:nrow(beatles_albums)){
+  title1 &lt;- beatles_albums[[1]][i]
+  l &lt;- list(title1)
+  b &lt;- cos_w %&gt;% select(as.character(title1))
+  l &lt;- list.append(l, round(sum(a*b)/sqrt(sum(a^2)*sum(b^2)),3))
+  cosines &lt;- rbind(cosines, l)
+}
+
+cosines &lt;- data.frame(cosines)
+
+cosines &lt;- cosines%&gt;%
+  arrange(desc(cosines))
+
+cosines$album &lt;- factor(cosines$album, levels = cosines$album[order(cosines$cosines)])
+
+ggplot(cosines) + 
+  geom_col(aes(album, cosines, fill=I(&quot;steelblue3&quot;), col=I(&quot;black&quot;)),show.legend = F) +
+  theme_bw() + coord_flip() + 
+  labs(title = &quot;Cosine similarities with Please Please Me&quot;, y = &quot;cosine similarity&quot;) + 
+  theme(plot.title = element_text(size = rel(1.25))) + 
+  ylim(0,1)
+</code></pre>
+
+<p><img src="/img/02_beatles_02_resize.jpg" alt="alt text" /></p>
+
+<p>It is not surprising that &lsquo;A Hard Day&rsquo;s Night&rsquo; is very similar to Please
+Please Me, but Abbey Road (no. 12) also shares a lot with it.
+Sgt. Pepper&rsquo;s (no. 8) is an interesting album: it is the most distinct
+one amongst the core and, as we will see it later, by some measure it
+has more complex lyrics than any of the other LPs. (St. Pepper&rsquo;s was the
+first album of the &lsquo;studio years&rsquo;, when the band was finally freed from
+the burden of permanent touring. It was an experimental album which took
+700 hours to record.)
+<br><br></p>
+
+<h2 id="text-complexity">Text Complexity</h2>
+
+<p>Next I turned to text complexity. Can we see an arch of change as the
+group gets older, grows confidence, and starts to have something else to
+say than &lsquo;I love you&rsquo;?</p>
+
+<p>There are various measures of text complexity, and all aims to assess
+the readability of prosaic test. Since these metrics have been developed
+to prose, applying them to lyrics, which is basically poetry, is not
+straightforward. In songs and poems text serves the melody (rhythm),
+and, for the lack of proper punctuation, standard algorithms cannot
+detect where sentences start and end. The basis of complexity metrics is
+usually the number of words in a sentence, the lengths of the words, and
+the ratio of complex words within all words. These measures are focusing
+on how the text is built, and they don&rsquo;t filter for stop words, as the
+use of these stop words is also a sign of sophistication. These are,
+obviously, the simplest measures and they do not account for other
+dimensions of complexity, like the frequency with which people use these
+words or the types of texts where these words are typical. By these
+metrics, for instance, the word &lsquo;championship&rsquo; is way more elaborate
+than the word &lsquo;cat&rsquo;, although the context where the former is mostly
+used may not be more academic than the one for the latter.</p>
+
+<p>In this exercise I use the modified version of two complexity measures.
+The &lsquo;<strong>Automated Readability Index</strong>&rsquo; uses characters, words and
+sentences so, that</p>
+
+<p><div class=text-center>
+ARI = 4.71 x (characters/words) + 0.5 x (words/sentences) - 21.43
+</div>
+<br>
+The &lsquo;<strong>Gunning Fog</strong>&rsquo; score is based on words, sentences, and the ratio
+of complex words:
+<br>
+<div class=text-center>
+Gunning Fog = 0.4 x ( (words/sentences) + 100 x (complex words/words) )
+</div>
+<br>
+A word is considered to be complex if it has at least 3 syllables.
+Higher complexity scores indicate more complicated text.</p>
+
+<p>Since sentences are loosely defined in lyrics, I replaced them by lines,
+despite that sentences can be of multiple lines. Lines are the main
+building blocks of song text, so using them as a proxy is a viable
+option. As the original formulas are this way &lsquo;modified&rsquo;, I denote these
+measures as mARI and mGunningFog. In this form they are probably more
+imperfect as they originally are, but they do show meaningful patterns
+even in our case.</p>
+
+<p>In order to calculate these measures for each album I looped through the
+album titles and selected distinct lines for analysis. The reason for
+using distinct lines is that in songs lines are many times repeated for
+the sake of the melody, serving as chorus, and complete verses can be
+reused to fill the melody with sufficient amount of text for the vocals.</p>
+
+<p>For the complexity metrics I used the &lsquo;syllable&rsquo; package, which produces
+certain text statistics from which these scores can be calculated. The
+result is in the next chart.</p>
+
+<pre><code class="language-.r">text_complexity &lt;- data.table(album = character(),
+                              mGunningFog = numeric(),
+                              mARI = numeric())
+
+for(i in 1:nrow(beatles_albums)){
+  name &lt;- beatles_albums[[1]][i]
+  l &lt;-  list(name)
+  temp_lyr &lt;- beatles_lyrics %&gt;%
+    filter(album == as.character(name)) %&gt;%
+    distinct(text)
+  rwstat &lt;- readability_word_stats(temp_lyr[,1])
+  l &lt;-  list.append(l, 0.4*(rwstat$n.words/nrow(temp_lyr)) +
+                      100*(rwstat$n.complexes/rwstat$n.words))
+  l &lt;- list.append(l, 4.71*(rwstat$n.chars/rwstat$n.words) +
+                     0.5*(rwstat$n.words/nrow(temp_lyr)) - 21.43)
+  text_complexity &lt;- rbind(text_complexity, l)
+}
+
+ggplot(data = text_complexity, aes(mARI, mGunningFog)) + 
+  geom_point(color = &quot;darkblue&quot;) +
+  geom_text(aes(x = mARI, y = mGunningFog, label = album), hjust=1, vjust=-0.5) + 
+  theme_bw() + labs(title = &quot;Text complexity of Beatles albums&quot;) + 
+  theme(plot.title = element_text(size = rel(1.25)))  +
+  ylim(4,8) + xlim(-3,1)
+</code></pre>
+
+<p><img src="/img/02_beatles_03.jpg" alt="alt text" /></p>
+
+<p>While the two metrics put the albums in slightly different orders, the
+trend is obvious. The first albums (Please Please Me, A Hard Day&rsquo;s
+Night, With The Beatles) are of fairly simple text, but as time goes by
+sophistication increases. Let It Be (no. 13) and Abbey Road (no. 12)
+have fairly high readings by ARI, and Let It Be is the single most
+complex according to Gunning Fox. Note that Sgt. Pepper (no. 8) is of
+relatively high complexity: it is the most complex by ARI and the third
+most complex by Gunning Fog. Remember, Sgt. Pepper is the most
+dissimilar album compared to the Please Please Me benchmark by cosine
+similarity.</p>
+
+<p>If we look at the publication dates of these albums (not shown here) we
+do see a development in the group&rsquo;s artistic performance. Four out of
+the last five albums (&lsquo;Magical Mystery Tour&rsquo;, &lsquo;The Beatles The White
+Album&rsquo;, &lsquo;Abbey Road&rsquo;, &lsquo;Let It Be&rsquo;) are in the top right corner of the
+chart, while the first five LPs are in the bottom left.
+<br><br></p>
+
+<h2 id="summary">Summary</h2>
+
+<p>This short analysis tries to provide an insight into the carrier of The
+Beatles through their lyrics. Songs were very simple at the beginning,
+but as their music got more mature, their lyrics followed on. Measures
+of text complexity, just as those of similarity, can also reveal the
+uniqueness of the St. Pepper&rsquo;s album.</p>
+
+<p>Among the tools, tidytext, syllable, and of course the geniusR packages
+were used to compile this report.</p>
+
+    </div>
+
+    
+
+
+<div class="article-tags">
+  
+  <a class="label label-default" href="https://peterduronelly.github.io/tags/r/">R</a>
+  
+  <a class="label label-default" href="https://peterduronelly.github.io/tags/tidytext/">tidytext</a>
+  
+  <a class="label label-default" href="https://peterduronelly.github.io/tags/unstructured-text-data/">unstructured text data</a>
+  
+</div>
+
+
+
+
+    
+    
+
+    
+
+    
+
+
+  </div>
+</article>
+
+<footer class="site-footer">
+  <div class="container">
+
+    
+
+    <p class="powered-by">
+
+      &copy; 2018 &middot; 
+
+      Powered by the
+      <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+      <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+      <span class="pull-right" aria-hidden="true">
+        <a href="#" id="back_to_top">
+          <span class="button_icon">
+            <i class="fas fa-chevron-up fa-2x"></i>
+          </span>
+        </a>
+      </span>
+
+    </p>
+  </div>
+</footer>
+
+
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close btn-large" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Cite</h4>
+      </div>
+      <div>
+        <pre><code class="modal-body tex"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-primary btn-outline js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-primary btn-outline js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+    
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha512-3P8rXCuGJdNZOnUx/03c1jOTnMn3rP63nBip5gOP2qmUh5YAdVAvFZ1E+QLZZbC1rtMrQb+mah3AfYW11RUrWA==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.3/imagesloaded.pkgd.min.js" integrity="sha512-umsR78NN0D23AzgoZ11K7raBD+R6hqKojyBZs1w8WvYlsI+QuKRGBx3LFCwhatzBunCjDuJpDHwxD13sLMbpRA==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha512-iztkobsvnjKfAtTNdHkGVjAYTrrtlC7mGp/54c40wowO7LhURYl3gVzzcEqGl/qKXQltJ2HwMrdLcNUdo+N/RQ==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.4/isotope.pkgd.min.js" integrity="sha512-VDBOIlDbuC4VWxGJNmuFRQ0Li0SKkDpmGyuhAG5LTDLd/dJ/S0WMVxriR2Y+CyPL5gzjpN4f/6iqWVBJlht0tQ==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" integrity="sha256-X5PoE3KU5l+JcX+w09p/wHl9AzK333C4hJ2I9S5mD4M=" crossorigin="anonymous"></script>
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
+        
+      
+
+      
+      
+    
+
+    <script src="/js/hugo-academic.js"></script>
+    
+
+    
+    
+
+    
+    
+    
+
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    
+    
+    <script>
+      const search_index_filename = "/index.json";
+      const i18n = {
+        'placeholder': "Search...",
+        'no_results': "No results found"
+      };
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    <script src="/js/search.js"></script>
+    
+
+    
+    
+
+  </body>
+</html>
+

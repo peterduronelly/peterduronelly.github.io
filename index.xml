@@ -11,6 +11,405 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Text Complexity Analysis of Beatles Lyrics With R</title>
+      <link>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</link>
+      <pubDate>Thu, 13 Sep 2018 13:39:08 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</guid>
+      <description>
+
+&lt;p&gt;The Beatles became hit through its powerful music but it is not famous for its poetry. But the group&amp;rsquo;s
+lyrics did change during the band&amp;rsquo;s short existence and we can use text analysis to track these changes.
+This post is about measuring the change in the complexity of the group&amp;rsquo;s lyrics, from Please, Please Me
+to Abbey Road, showing how we can use basic data secience tools to find really fancy patterns in unstructured
+text data.&lt;/p&gt;
+
+&lt;p&gt;This piece is a shortened version of a final project for a Data Science
+on Unstructured Text Data course held by Facebook&amp;rsquo;s Eduardo Ariño de la
+Rubia. The course introduced the tidytext package and the basics of text
+analysis in R. At the end of the course students had to present their
+skills through a freely chosen analysis project. Although tidytext does
+not directly cover text complexity, to me it was somehow an obvious
+choice.&lt;/p&gt;
+
+&lt;p&gt;This is a technical post, but most of the hard stuff is concentrated in the
+code blocks. If you are only interested in the power of data science, feel free
+to disregard these blocks and concentrate on the text and the plots only. You
+will still be able to get the message.&lt;/p&gt;
+
+&lt;p&gt;When you learn English as a foreign language you inevitably bump into
+The Beatles early on. The songs are well known, and even a beginner
+student can easily understand the lyrics. This is not only because the
+members were singing in nice English, but because their early text is
+damned simple. &amp;lsquo;She loves you, yeah, yeah, yeah.&amp;rsquo; Not that of a
+challenging text, right?&lt;/p&gt;
+
+&lt;p&gt;But when you listen to The Beatles a little more, you realize that as
+time went by their songs got more and more sophisticated. &amp;lsquo;Strawberry
+Fields Forever&amp;rsquo; does have more depth than &amp;lsquo;A Hard Day&amp;rsquo;s Night&amp;rsquo;. Since we
+are into data science, it is obvious to ask: can we measure this change
+in sophistication? Can we trace the development also in their lyrics? As
+the members went from their early twenties towards their thirties, did
+they move from their simple but powerful origins towards something more
+mature?&lt;/p&gt;
+
+&lt;p&gt;In the next few lines I am analyzing The Beatles&amp;rsquo; thirteen albums of
+&amp;lsquo;core catalogues&amp;rsquo; from &amp;lsquo;Please Please Me&amp;rsquo; to &amp;lsquo;Let It Be&amp;rsquo;, published
+between 1964 and 1970. It is amazing but the most influential pop group
+of all times existed for less than a decade, and this short period was
+enough to issue thirteen albums and to turn the world upside down. The
+group had quite a few extra collections, live recordings and greatest
+hit compilations (the last one, according to wikipedia, in 2013), but
+these thirteen albums make up the the actual works of the group.&lt;/p&gt;
+
+&lt;p&gt;For the project I used the newly developed &lt;a href=&#34;https://github.com/JosiahParry/geniusR&#34; target=&#34;_blank&#34;&gt;geniusR package&lt;/a&gt; by Josiah Parry, which downloads lyrics and
+metadata from the genius.com homepage. This package was of enormous help
+for the analysis.
+&lt;br&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;a-glance-at-the-beatles&#34;&gt;A Glance At The Beatles&lt;/h2&gt;
+
+&lt;p&gt;As a starter I imported the necessary packages. I like starting all
+analysis with the packages, having them in one single chunk for a better
+overview. Also, when I later need to add further packages I just scroll
+back to the first chunk to enter the extra library command.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;library(geniusR)
+library(tidyverse)
+library(tidytext)
+library(tidyr)
+library(tibble)
+library(dplyr)
+library(purrr)
+library(stringr)
+library(syllable)
+library(ggplot2)
+library(scales)
+library(gridExtra)
+library(lsa)
+library(rlist)
+library(data.table)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Downloading the text is simple with geniusR: you define the artist, the
+number of albums to download, and the album titles. Album titles should
+be entered as the last part of the urls on the genius.com webpage
+without hyphens. Apostrophes are omitted. You can also download albums
+of multiple artists entering the author, # of albums multiple
+times as a vector. See the documentation and Josiah&amp;rsquo;s github for
+details.&lt;/p&gt;
+
+&lt;p&gt;It takes a while until your text downloads, but you end up with a nice
+(tidy!) tibble which serves as the basis for further analysis.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;albums &amp;lt;-  tibble(
+  artist = 
+    rep(&amp;quot;The Beatles&amp;quot;, 13),
+  album = c(
+    &amp;quot;Please Please Me&amp;quot;, &amp;quot;With The Beatles&amp;quot;, &amp;quot;A Hard Day s Night&amp;quot;,
+    &amp;quot;Beatles For Sale&amp;quot;, &amp;quot;Help&amp;quot;, &amp;quot;Rubber Soul&amp;quot;,
+    &amp;quot;Revolver&amp;quot;, &amp;quot;Sgt Pepper s Lonely Hearts Club Band&amp;quot;, &amp;quot;Magical Mystery Tour&amp;quot;,
+    &amp;quot;The Beatles The White Album&amp;quot;, &amp;quot;Yellow Submarine&amp;quot;, &amp;quot;Abbey Road&amp;quot;,
+    &amp;quot;Let It Be&amp;quot;
+  )
+)
+
+album_lyrics &amp;lt;- albums %&amp;gt;% 
+  mutate(tracks = map2(artist, album, genius_album))
+
+beatles_lyrics &amp;lt;- album_lyrics %&amp;gt;% 
+  unnest(tracks) 
+
+beatles_albums &amp;lt;- beatles_lyrics %&amp;gt;%
+  distinct(album)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As the most obvious starting point of any text analysis, I checked the
+per album frequencies of non-stop words across these albums. (For the wider
+audience: &lt;a href=&#34;https://en.wikipedia.org/wiki/Stop_words&#34; target=&#34;_blank&#34;&gt;stop words&lt;/a&gt; are the most common, &amp;lsquo;functional&amp;rsquo; words in a language.) In order to
+draw an arch of change, I plotted simple word frequency charts for
+Please Please Me (1963), Help (1965), Magical Mystery Tour (1967) and
+Let It Be (1970). Can we see any difference in the words used?&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;tidy_beatles &amp;lt;- beatles_lyrics %&amp;gt;%
+  unnest_tokens(word, text) %&amp;gt;%
+  filter(nchar(word)&amp;gt;2)%&amp;gt;%
+  anti_join(stop_words) %&amp;gt;%
+  group_by(album) %&amp;gt;%
+  count(word, sort = TRUE) %&amp;gt;%
+  ungroup()
+
+total_words &amp;lt;- tidy_beatles %&amp;gt;% 
+  group_by(album) %&amp;gt;% 
+  summarize(total = sum(n))
+
+tidy_beatles &amp;lt;- left_join(tidy_beatles, total_words)
+
+tidy_beatles &amp;lt;- tidy_beatles %&amp;gt;%
+  mutate(freq = n / total)
+  
+ppm &amp;lt;- tidy_beatles %&amp;gt;%
+  filter(str_detect(album, &amp;quot;Please&amp;quot;))%&amp;gt;%
+  arrange(desc(freq)) %&amp;gt;%
+  top_n(10)%&amp;gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&amp;gt;% 
+  ggplot(aes(word, freq, fill=I(&amp;quot;steelblue3&amp;quot;), col=I(&amp;quot;black&amp;quot;))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = &amp;quot;frequency&amp;quot;) +
+  coord_flip() + 
+  theme_bw() + 
+  labs(title = &amp;quot;Word frequency in Please Please Me&amp;quot;) + 
+  theme(plot.title = element_text(size = rel(1))) +
+  scale_y_continuous(labels = percent)
+
+help &amp;lt;- tidy_beatles %&amp;gt;%
+  filter(str_detect(album, &amp;quot;Help&amp;quot;))%&amp;gt;%
+  arrange(desc(freq)) %&amp;gt;%
+  top_n(10)%&amp;gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&amp;gt;% 
+  ggplot(aes(word, freq, fill=I(&amp;quot;steelblue3&amp;quot;), col=I(&amp;quot;black&amp;quot;))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = &amp;quot;frequency&amp;quot;) +
+  coord_flip() + 
+  theme_bw() + 
+  labs(title = &amp;quot;Word frequency in Help&amp;quot;) + 
+  theme(plot.title = element_text(size = rel(1))) +
+  scale_y_continuous(labels = percent)
+
+mys &amp;lt;- tidy_beatles %&amp;gt;%
+  filter(str_detect(album, &amp;quot;Mystery&amp;quot;))%&amp;gt;%
+  arrange(desc(freq)) %&amp;gt;%
+  top_n(10)%&amp;gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&amp;gt;% 
+  ggplot(aes(word, freq, fill=I(&amp;quot;steelblue3&amp;quot;), col=I(&amp;quot;black&amp;quot;))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = &amp;quot;frequency&amp;quot;) +
+  coord_flip() + 
+  theme_bw() + 
+  labs(title = &amp;quot;Word frequency in Magical Myster Tour&amp;quot;) + 
+  theme(plot.title = element_text(size = rel(1))) +
+  scale_y_continuous(labels = percent)
+
+lib &amp;lt;- tidy_beatles %&amp;gt;%
+  filter(str_detect(album, &amp;quot;Let&amp;quot;))%&amp;gt;%
+  arrange(desc(freq)) %&amp;gt;%
+  top_n(10)%&amp;gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&amp;gt;% 
+  ggplot(aes(word, freq, fill=I(&amp;quot;steelblue3&amp;quot;), col=I(&amp;quot;black&amp;quot;))) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = &amp;quot;frequency&amp;quot;) +
+  coord_flip() + 
+  theme_bw() + 
+  labs(title = &amp;quot;Word frequency in Let It Be&amp;quot;) + 
+  theme(plot.title = element_text(size = rel(1))) +
+  scale_y_continuous(labels = percent)
+
+grid.arrange(ppm, help, mys, lib, nrow = 2)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/02_beatles_01_resize.jpg&#34; alt=&#34;alt text&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Love makes it into the first 10 in three of the albums, leading the pack
+in Please Please Me and, to my little surprise, Magical Mystery Tour.
+Interestingly, it is missing from the top 10 in Let It Be, the last
+album. It looks, love was not of primary interest by 1970, the year when
+the members decided to go their own separate ways. Of course, per album
+word frequency depends largely on the songs&amp;rsquo; topic selection: &amp;lsquo;mother&amp;rsquo;
+goes to number 2 in Magical Mystery Tour due to the many repetitions of
+the line &amp;lsquo;Your mother should know&amp;rsquo; in the song of the same title.&lt;/p&gt;
+
+&lt;p&gt;This simple exercise shows that working with lyrics can be very tricky.
+Lines are repeated very often, and melody dominates sentence building.
+As a matter of fact, sentences can only be poorly defined by regular
+text analysis algorithms in songs, which, as we will see later, makes
+measuring text complexity somewhat difficult.
+&lt;br&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;measuring-similarity-across-core-albums&#34;&gt;Measuring Similarity Across Core Albums&lt;/h2&gt;
+
+&lt;p&gt;In order to asses how much the group changed over the course of these
+seven years I measured the similarity of each album to Please Please Me,
+the very first LP. More and more sophisticated lyrics would result in
+larger and larger differences in text, measured by cosine similarity.&lt;/p&gt;
+
+&lt;p&gt;I calculated cosine similarity based on word frequency vectors, where
+each album is vector of frequencies of words in a union of sets of words
+from each album. The word list is a product of a full join of all words
+from the all the albums, and the cosine for each album is a similarity
+measure between that particular album and the benchmark Please Please
+Me. This word list excludes stop words, of course.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;cos &amp;lt;- tidy_beatles %&amp;gt;%
+  select(album, word, freq)
+
+cos_w &amp;lt;- spread(cos, key = album, value = freq) # This is a matrix where entries are frequencies of words in the the various albums. NAs are replaced by zeros in the next command. 
+
+cos_w[is.na(cos_w)] &amp;lt;- 0
+
+cos_w &amp;lt;- cos_w %&amp;gt;%
+  select(-word)
+
+title &amp;lt;- beatles_albums[[1]][1]
+a &amp;lt;- cos_w %&amp;gt;% select(as.character(title))
+
+
+cosines &amp;lt;- data.table(album = character(),
+                      cosines = numeric())
+
+for(i in 2:nrow(beatles_albums)){
+  title1 &amp;lt;- beatles_albums[[1]][i]
+  l &amp;lt;- list(title1)
+  b &amp;lt;- cos_w %&amp;gt;% select(as.character(title1))
+  l &amp;lt;- list.append(l, round(sum(a*b)/sqrt(sum(a^2)*sum(b^2)),3))
+  cosines &amp;lt;- rbind(cosines, l)
+}
+
+cosines &amp;lt;- data.frame(cosines)
+
+cosines &amp;lt;- cosines%&amp;gt;%
+  arrange(desc(cosines))
+
+cosines$album &amp;lt;- factor(cosines$album, levels = cosines$album[order(cosines$cosines)])
+
+ggplot(cosines) + 
+  geom_col(aes(album, cosines, fill=I(&amp;quot;steelblue3&amp;quot;), col=I(&amp;quot;black&amp;quot;)),show.legend = F) +
+  theme_bw() + coord_flip() + 
+  labs(title = &amp;quot;Cosine similarities with Please Please Me&amp;quot;, y = &amp;quot;cosine similarity&amp;quot;) + 
+  theme(plot.title = element_text(size = rel(1.25))) + 
+  ylim(0,1)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/02_beatles_02_resize.jpg&#34; alt=&#34;alt text&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;It is not surprising that &amp;lsquo;A Hard Day&amp;rsquo;s Night&amp;rsquo; is very similar to Please
+Please Me, but Abbey Road (no. 12) also shares a lot with it.
+Sgt. Pepper&amp;rsquo;s (no. 8) is an interesting album: it is the most distinct
+one amongst the core and, as we will see it later, by some measure it
+has more complex lyrics than any of the other LPs. (St. Pepper&amp;rsquo;s was the
+first album of the &amp;lsquo;studio years&amp;rsquo;, when the band was finally freed from
+the burden of permanent touring. It was an experimental album which took
+700 hours to record.)
+&lt;br&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;text-complexity&#34;&gt;Text Complexity&lt;/h2&gt;
+
+&lt;p&gt;Next I turned to text complexity. Can we see an arch of change as the
+group gets older, grows confidence, and starts to have something else to
+say than &amp;lsquo;I love you&amp;rsquo;?&lt;/p&gt;
+
+&lt;p&gt;There are various measures of text complexity, and all aims to assess
+the readability of prosaic test. Since these metrics have been developed
+to prose, applying them to lyrics, which is basically poetry, is not
+straightforward. In songs and poems text serves the melody (rhythm),
+and, for the lack of proper punctuation, standard algorithms cannot
+detect where sentences start and end. The basis of complexity metrics is
+usually the number of words in a sentence, the lengths of the words, and
+the ratio of complex words within all words. These measures are focusing
+on how the text is built, and they don&amp;rsquo;t filter for stop words, as the
+use of these stop words is also a sign of sophistication. These are,
+obviously, the simplest measures and they do not account for other
+dimensions of complexity, like the frequency with which people use these
+words or the types of texts where these words are typical. By these
+metrics, for instance, the word &amp;lsquo;championship&amp;rsquo; is way more elaborate
+than the word &amp;lsquo;cat&amp;rsquo;, although the context where the former is mostly
+used may not be more academic than the one for the latter.&lt;/p&gt;
+
+&lt;p&gt;In this exercise I use the modified version of two complexity measures.
+The &amp;lsquo;&lt;strong&gt;Automated Readability Index&lt;/strong&gt;&amp;rsquo; uses characters, words and
+sentences so, that&lt;/p&gt;
+
+&lt;p&gt;&lt;div class=text-center&gt;
+ARI = 4.71 x (characters/words) + 0.5 x (words/sentences) - 21.43
+&lt;/div&gt;
+&lt;br&gt;
+The &amp;lsquo;&lt;strong&gt;Gunning Fog&lt;/strong&gt;&amp;rsquo; score is based on words, sentences, and the ratio
+of complex words:
+&lt;br&gt;
+&lt;div class=text-center&gt;
+Gunning Fog = 0.4 x ( (words/sentences) + 100 x (complex words/words) )
+&lt;/div&gt;
+&lt;br&gt;
+A word is considered to be complex if it has at least 3 syllables.
+Higher complexity scores indicate more complicated text.&lt;/p&gt;
+
+&lt;p&gt;Since sentences are loosely defined in lyrics, I replaced them by lines,
+despite that sentences can be of multiple lines. Lines are the main
+building blocks of song text, so using them as a proxy is a viable
+option. As the original formulas are this way &amp;lsquo;modified&amp;rsquo;, I denote these
+measures as mARI and mGunningFog. In this form they are probably more
+imperfect as they originally are, but they do show meaningful patterns
+even in our case.&lt;/p&gt;
+
+&lt;p&gt;In order to calculate these measures for each album I looped through the
+album titles and selected distinct lines for analysis. The reason for
+using distinct lines is that in songs lines are many times repeated for
+the sake of the melody, serving as chorus, and complete verses can be
+reused to fill the melody with sufficient amount of text for the vocals.&lt;/p&gt;
+
+&lt;p&gt;For the complexity metrics I used the &amp;lsquo;syllable&amp;rsquo; package, which produces
+certain text statistics from which these scores can be calculated. The
+result is in the next chart.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;text_complexity &amp;lt;- data.table(album = character(),
+                              mGunningFog = numeric(),
+                              mARI = numeric())
+
+for(i in 1:nrow(beatles_albums)){
+  name &amp;lt;- beatles_albums[[1]][i]
+  l &amp;lt;-  list(name)
+  temp_lyr &amp;lt;- beatles_lyrics %&amp;gt;%
+    filter(album == as.character(name)) %&amp;gt;%
+    distinct(text)
+  rwstat &amp;lt;- readability_word_stats(temp_lyr[,1])
+  l &amp;lt;-  list.append(l, 0.4*(rwstat$n.words/nrow(temp_lyr)) +
+                      100*(rwstat$n.complexes/rwstat$n.words))
+  l &amp;lt;- list.append(l, 4.71*(rwstat$n.chars/rwstat$n.words) +
+                     0.5*(rwstat$n.words/nrow(temp_lyr)) - 21.43)
+  text_complexity &amp;lt;- rbind(text_complexity, l)
+}
+
+ggplot(data = text_complexity, aes(mARI, mGunningFog)) + 
+  geom_point(color = &amp;quot;darkblue&amp;quot;) +
+  geom_text(aes(x = mARI, y = mGunningFog, label = album), hjust=1, vjust=-0.5) + 
+  theme_bw() + labs(title = &amp;quot;Text complexity of Beatles albums&amp;quot;) + 
+  theme(plot.title = element_text(size = rel(1.25)))  +
+  ylim(4,8) + xlim(-3,1)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/02_beatles_03.jpg&#34; alt=&#34;alt text&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;While the two metrics put the albums in slightly different orders, the
+trend is obvious. The first albums (Please Please Me, A Hard Day&amp;rsquo;s
+Night, With The Beatles) are of fairly simple text, but as time goes by
+sophistication increases. Let It Be (no. 13) and Abbey Road (no. 12)
+have fairly high readings by ARI, and Let It Be is the single most
+complex according to Gunning Fox. Note that Sgt. Pepper (no. 8) is of
+relatively high complexity: it is the most complex by ARI and the third
+most complex by Gunning Fog. Remember, Sgt. Pepper is the most
+dissimilar album compared to the Please Please Me benchmark by cosine
+similarity.&lt;/p&gt;
+
+&lt;p&gt;If we look at the publication dates of these albums (not shown here) we
+do see a development in the group&amp;rsquo;s artistic performance. Four out of
+the last five albums (&amp;lsquo;Magical Mystery Tour&amp;rsquo;, &amp;lsquo;The Beatles The White
+Album&amp;rsquo;, &amp;lsquo;Abbey Road&amp;rsquo;, &amp;lsquo;Let It Be&amp;rsquo;) are in the top right corner of the
+chart, while the first five LPs are in the bottom left.
+&lt;br&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;summary&#34;&gt;Summary&lt;/h2&gt;
+
+&lt;p&gt;This short analysis tries to provide an insight into the carrier of The
+Beatles through their lyrics. Songs were very simple at the beginning,
+but as their music got more mature, their lyrics followed on. Measures
+of text complexity, just as those of similarity, can also reveal the
+uniqueness of the St. Pepper&amp;rsquo;s album.&lt;/p&gt;
+
+&lt;p&gt;Among the tools, tidytext, syllable, and of course the geniusR packages
+were used to compile this report.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Sparse Matrices in Python</title>
       <link>https://peterduronelly.github.io/post/sparse-matrices-in-python/</link>
       <pubDate>Thu, 13 Sep 2018 11:17:13 +0200</pubDate>

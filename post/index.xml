@@ -13,6 +13,15 @@
     
     
     <item>
+      <title>Text Complexity Analysis of Beatles Lyrics With R</title>
+      <link>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</link>
+      <pubDate>Thu, 13 Sep 2018 13:39:08 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</guid>
+      <description>The Beatles became hit through its powerful music but it is not famous for its poetry. But the group&amp;rsquo;s lyrics did change during the band&amp;rsquo;s short existence and we can use text analysis to track these changes. This post is about measuring the change in the complexity of the group&amp;rsquo;s lyrics, from Please, Please Me to Abbey Road, showing how we can use basic data secience tools to find really fancy patterns in unstructured text data.</description>
+    </item>
+    
+    <item>
       <title>Sparse Matrices in Python</title>
       <link>https://peterduronelly.github.io/post/sparse-matrices-in-python/</link>
       <pubDate>Thu, 13 Sep 2018 11:17:13 +0200</pubDate>
