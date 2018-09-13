@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 2.4.0">
+  <meta name="generator" content="Hugo 0.48" />
+  <meta name="author" content="Peter Duronelly">
+
+  
+  
+  
+  
+    
+  
+  <meta name="description" content="One of the things we need to manage in data analysis is recources. When we have large amounts of (&lsquo;big&rsquo;) data this can become a serious issue. One of the cases when we need to consider whether we really need all the data we have is when we have a lot of zeros in our database, and these zeroes happen to be irrelevant for our calculations. Python&rsquo;s SciPy library has a solution to store and handle sparse data matrices which contain a large number of irrelevant zero values.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://peterduronelly.github.io/post/sparse-matrices-in-python/">
+
+  
+
+
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#0095eb">
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha512-6MXa8B6uaO18Hid6blRMetEIoPqHf7Ux1tnyIQdpt9qI5OACx7C+O3IVTr98vwGnlcg0LOLa02i9Y1HpVhlfiw==" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" integrity="sha256-ygkqlh3CYSUri3LhQxzdcm0n1EQvH2Y+U5S2idbLtxs=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" crossorigin="anonymous">
+        
+      
+    
+
+    
+
+    
+
+  
+
+  
+  
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat:400,700%7cRoboto:400,400italic,700%7cRoboto&#43;Mono">
+  
+
+  <link rel="stylesheet" href="/styles.css">
+  
+
+  
+  
+  
+
+  
+  <link rel="alternate" href="https://peterduronelly.github.io/index.xml" type="application/rss+xml" title="Tiny Little Things in Data Science">
+  <link rel="feed" href="https://peterduronelly.github.io/index.xml" type="application/rss+xml" title="Tiny Little Things in Data Science">
+  
+
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/png" href="/img/icon.png">
+  <link rel="apple-touch-icon" type="image/png" href="/img/icon-192.png">
+
+  <link rel="canonical" href="https://peterduronelly.github.io/post/sparse-matrices-in-python/">
+
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="Tiny Little Things in Data Science">
+  <meta property="og:url" content="https://peterduronelly.github.io/post/sparse-matrices-in-python/">
+  <meta property="og:title" content="Sparse Matrices in Python | Tiny Little Things in Data Science">
+  <meta property="og:description" content="One of the things we need to manage in data analysis is recources. When we have large amounts of (&lsquo;big&rsquo;) data this can become a serious issue. One of the cases when we need to consider whether we really need all the data we have is when we have a lot of zeros in our database, and these zeroes happen to be irrelevant for our calculations. Python&rsquo;s SciPy library has a solution to store and handle sparse data matrices which contain a large number of irrelevant zero values.">
+  <meta property="og:locale" content="en-us">
+  
+  <meta property="article:published_time" content="2018-09-13T11:17:13&#43;02:00">
+  
+  <meta property="article:modified_time" content="2018-09-13T11:17:13&#43;02:00">
+  
+
+  
+
+  
+
+  <title>Sparse Matrices in Python | Tiny Little Things in Data Science</title>
+
+</head>
+<body id="top" data-spy="scroll" data-target="#toc" data-offset="71" >
+
+<nav class="navbar navbar-default navbar-fixed-top" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="navbar-header">
+      
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+              data-target=".navbar-collapse" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+      <a class="navbar-brand" href="/">Tiny Little Things in Data Science</a>
+    </div>
+
+    
+    <div class="collapse navbar-collapse">
+
+      
+      
+      <ul class="nav navbar-nav navbar-right">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#about">
+            
+            <span>Home</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#posts">
+            
+            <span>Posts</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#contact">
+            
+            <span>Contact</span>
+            
+          </a>
+        </li>
+
+        
+        
+      
+
+      
+      </ul>
+
+    </div>
+  </div>
+</nav>
+
+
+<article class="article" itemscope itemtype="http://schema.org/Article">
+
+  
+
+
+  <div class="article-container">
+    <h1 itemprop="name">Sparse Matrices in Python</h1>
+
+    
+
+<div class="article-metadata">
+
+  
+  
+  
+  <div>
+    
+    <span itemscope itemprop="author" itemtype="http://schema.org/Person">
+      <span itemprop="name">Peter Duronelly</span>
+    </span>
+    
+  </div>
+  
+
+  <span class="article-date">
+    
+    <meta content="2018-09-13 11:17:13 &#43;0200 CEST" itemprop="datePublished">
+    <time datetime="2018-09-13 11:17:13 &#43;0200 CEST" itemprop="dateModified">
+      Sep 13, 2018
+    </time>
+  </span>
+  <span itemscope itemprop="publisher" itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Peter Duronelly">
+  </span>
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    6 min read
+  </span>
+  
+
+  
+  
+
+  
+  
+  
+  
+
+  
+  
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    <li>
+      <a class="twitter"
+         href="https://twitter.com/intent/tweet?text=Sparse%20Matrices%20in%20Python&amp;url=https%3a%2f%2fpeterduronelly.github.io%2fpost%2fsparse-matrices-in-python%2f"
+         target="_blank" rel="noopener">
+        <i class="fab fa-twitter"></i>
+      </a>
+    </li>
+    <li>
+      <a class="facebook"
+         href="https://www.facebook.com/sharer.php?u=https%3a%2f%2fpeterduronelly.github.io%2fpost%2fsparse-matrices-in-python%2f"
+         target="_blank" rel="noopener">
+        <i class="fab fa-facebook-f"></i>
+      </a>
+    </li>
+    <li>
+      <a class="linkedin"
+         href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fpeterduronelly.github.io%2fpost%2fsparse-matrices-in-python%2f&amp;title=Sparse%20Matrices%20in%20Python"
+         target="_blank" rel="noopener">
+        <i class="fab fa-linkedin-in"></i>
+      </a>
+    </li>
+    <li>
+      <a class="weibo"
+         href="http://service.weibo.com/share/share.php?url=https%3a%2f%2fpeterduronelly.github.io%2fpost%2fsparse-matrices-in-python%2f&amp;title=Sparse%20Matrices%20in%20Python"
+         target="_blank" rel="noopener">
+        <i class="fab fa-weibo"></i>
+      </a>
+    </li>
+    <li>
+      <a class="email"
+         href="mailto:?subject=Sparse%20Matrices%20in%20Python&amp;body=https%3a%2f%2fpeterduronelly.github.io%2fpost%2fsparse-matrices-in-python%2f">
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+  
+
+</div>
+
+
+    <div class="article-style" itemprop="articleBody">
+      <p>One of the things we need to manage in data analysis is recources. When we have large amounts of (&lsquo;big&rsquo;) data this can become a serious issue.
+One of the cases when we need to consider whether we really need all the data we have is when we have a lot of zeros in our database, and these zeroes
+happen to be irrelevant for our calculations. Python&rsquo;s <em>SciPy</em> library has a solution to store and handle <strong><em>sparse</em></strong> data matrices which contain a
+large number of irrelevant zero values.</p>
+
+<p>In order to demonstrate how this works let&rsquo;s first import the necessary packages.</p>
+
+<pre><code class="language-python">import numpy as np
+from scipy.sparse import coo_matrix
+from scipy.sparse import save_npz
+import matplotlib
+import matplotlib.pyplot as plt
+%matplotlib inline
+import random
+</code></pre>
+
+<p>Where would we come across sparse data? Let&rsquo;s imagine you are running an e-commerce site where people buy various products. Some poeple buy only one item, others buy multiple products. You want to see how clients are related, or linked, to each other based on their purchase patterns: if some customers buy the same or almost the same set of products, these clients are similar.</p>
+
+<p>Moreover, these linkages create a network clients, and this network can be used for recommendations, coupons, etc. Without going into the details how such a network can be built and used let&rsquo;s see how we get to sparse data when we analyze buying patterns.</p>
+
+<p>For the sake of simplicity let&rsquo;s assume that there are 15 clients and 30 products. Each client buys between 2 and 8 pieces of items.</p>
+
+<pre><code class="language-python">clients = list(range(0,15)) # 15 clients
+dic = {} # a dictionary of purchases: keys are clients and values are lists of items bought
+for i in range(0,15):
+    key = clients[i]
+    random.seed(i)
+    l = random.sample(range(0,30), random.randint(2,8))
+    dic[key] = l
+</code></pre>
+
+<p>We can print out what itemms clients have purchased.</p>
+
+<pre><code class="language-python">for key in dic.keys():
+    print(dic[key])
+</code></pre>
+
+<p>[12, 24, 13, 1, 8, 16, 15, 29]<br>
+[18, 27, 25]<br>
+[27, 1, 2, 29, 11, 5, 23, 21]<br>
+[18, 17, 4]<br>
+[9, 3, 23]<br>
+[8, 23, 11, 25, 22, 28]<br>
+[18, 26, 2, 15, 24, 8, 1, 0]<br>
+[4, 12, 20, 1]<br>
+[11, 12, 4]<br>
+[19, 11, 8, 4, 5]<br>
+[1, 13, 15, 18, 0, 6]<br>
+[27, 17, 29, 24, 14]<br>
+[8, 21, 16, 11, 4]<br>
+[9, 21, 29, 25]<br>
+[19, 22]<br></p>
+
+<p>Clients No. 0, 2 and 6 have bought eight items, and only one has bought two. Now we can build a matrix of clients where the matrix elements show the
+number of common items on their shopping history. Each  a<sub>ij</sub>  element of this matrix tells the number of items bought both by client <em>i</em>
+and client <em>j</em> . The  i<sup>th</sup>  diagonal element shows the number of items bought buy client <em>i</em>. This is going to be a symmetric matrix,
+of course.</p>
+
+<p>To build the matrix we need to define the row and column indices of the non-zero matrix elements, and the values of the elements. These are going to be
+lists of equal sizes, which serve as inputs for the sparse matrix. Since the matrix is symmetric, we don&rsquo;t need to calculate and store the lower
+diagonal elements to save space.</p>
+
+<pre><code class="language-python">r = 0 # the index of the row of the matrix
+c = 0 # the index of the columns of the matrix
+counter = 0
+row_indices = [] # row indices of the non-zero values
+column_indices = []  # column indices of the non-zero values
+matrix_elements = [] # the non-zero values themselves
+
+for key_r in dic.keys(): # key_r is the key for the rows
+    x = dic[key_r]
+    for key_c in dic.keys(): # key_c is the key for the columns
+        if c &gt;= r:
+            y = dic[key_c]
+            common_set = list(set(x) &amp; set(y))
+            common_set_size = len(common_set)
+            if common_set_size &gt; 0:
+                row_indices.append(r)
+                column_indices.append(c)
+                matrix_elements.append(common_set_size)
+        c = c + 1
+    r = r + 1
+    c = 0
+</code></pre>
+
+<p>Once we have the lists we can build the sparse matrix using the <em>coo_matrix</em> function. This function takes numpy arrays as inputs so we need to
+convert our lists to arrays. When building the matrix we need to add the non-zero elements first, then the indices as a tuple. Finally we need to
+define the size (shape) of the matrix. The resulting object will be of type <em>scipy.sparse.coo.coo_matrix</em>.</p>
+
+<pre><code class="language-python">row  = np.array(row_indices)
+col  = np.array(column_indices)
+val = np.array(matrix_elements)
+mx = coo_matrix((val, (row, col)), shape=(15, 15))
+</code></pre>
+
+<p>We can view the content of the matrix using the .toarray() command.</p>
+
+<pre><code class="language-python">mx.toarray()
+</code></pre>
+
+<p>array([[8, 0, 2, 0, 0, 1, 4, 2, 1, 1, 3, 2, 2, 1, 0],<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   [0, 3, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 8, 0, 1, 2, 2, 1, 1, 2, 1, 2, 2, 2, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 3, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 3, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 6, 1, 0, 1, 2, 0, 0, 2, 1, 1],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 0, 8, 1, 0, 1, 4, 1, 1, 0, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 0, 0, 4, 2, 1, 1, 0, 1, 0, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 0, 0, 2, 0, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 3, 0, 1],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0, 0, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 1, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 1, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0],<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2]])</p>
+
+<p>We can also visualize the matrix using the matplotlib library. This visualization shows where the non-zero values are located in the matrix,
+but it does not make a difference based on their values. All non-zero entries are indicated by the same color.</p>
+
+<pre><code class="language-python">plt.spy(mx)
+plt.show()
+</code></pre>
+
+<p><img src="/img/spars.png" alt="alternative text for search engines" /></p>
+
+<p>The chart has a slighlty different outlook if we use the matrix as a numpy array, and not as scipy.sparse.coo.coo_matrix object as plot input.
+The chart is built a little faster and has a different coloring scheme. The visualization, however, does not help much when we have really large
+amount of data, with thousands of rows and columns in our matrix: the screen resolution will not be able to differentiate between the white and
+non-white areas. This makes this visulization tool kind of useless in those cases when we really need to use the sparse matrix fuctionality for our resource
+management.</p>
+
+<pre><code class="language-python">mx_as_array = mx.toarray()
+plt.spy(mx_as_array)
+plt.show()
+</code></pre>
+
+<p><img src="/img/spars_2.png" alt="alt text" /></p>
+
+<p>Finally we can save the scipy.sparse.coo.coo_matrix object using the <em>save_npz()</em> command. For later use, the load_npz() command imports the
+sparse matrix to our project.</p>
+
+<pre><code class="language-python">save_npz('/path...', mx)
+</code></pre>
+
+    </div>
+
+    
+
+
+<div class="article-tags">
+  
+  <a class="label label-default" href="https://peterduronelly.github.io/tags/python/">Python</a>
+  
+  <a class="label label-default" href="https://peterduronelly.github.io/tags/scipy/">SciPy</a>
+  
+</div>
+
+
+
+
+    
+    
+
+    
+
+    
+
+
+  </div>
+</article>
+
+<footer class="site-footer">
+  <div class="container">
+
+    
+
+    <p class="powered-by">
+
+      &copy; 2018 &middot; 
+
+      Powered by the
+      <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+      <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+      <span class="pull-right" aria-hidden="true">
+        <a href="#" id="back_to_top">
+          <span class="button_icon">
+            <i class="fas fa-chevron-up fa-2x"></i>
+          </span>
+        </a>
+      </span>
+
+    </p>
+  </div>
+</footer>
+
+
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close btn-large" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Cite</h4>
+      </div>
+      <div>
+        <pre><code class="modal-body tex"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-primary btn-outline js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-primary btn-outline js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+    
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha512-3P8rXCuGJdNZOnUx/03c1jOTnMn3rP63nBip5gOP2qmUh5YAdVAvFZ1E+QLZZbC1rtMrQb+mah3AfYW11RUrWA==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.3/imagesloaded.pkgd.min.js" integrity="sha512-umsR78NN0D23AzgoZ11K7raBD+R6hqKojyBZs1w8WvYlsI+QuKRGBx3LFCwhatzBunCjDuJpDHwxD13sLMbpRA==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha512-iztkobsvnjKfAtTNdHkGVjAYTrrtlC7mGp/54c40wowO7LhURYl3gVzzcEqGl/qKXQltJ2HwMrdLcNUdo+N/RQ==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.4/isotope.pkgd.min.js" integrity="sha512-VDBOIlDbuC4VWxGJNmuFRQ0Li0SKkDpmGyuhAG5LTDLd/dJ/S0WMVxriR2Y+CyPL5gzjpN4f/6iqWVBJlht0tQ==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" integrity="sha256-X5PoE3KU5l+JcX+w09p/wHl9AzK333C4hJ2I9S5mD4M=" crossorigin="anonymous"></script>
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
+        
+      
+
+      
+      
+    
+
+    <script src="/js/hugo-academic.js"></script>
+    
+
+    
+    
+
+    
+    
+    
+
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    
+    
+    <script>
+      const search_index_filename = "/index.json";
+      const i18n = {
+        'placeholder': "Search...",
+        'no_results': "No results found"
+      };
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    <script src="/js/search.js"></script>
+    
+
+    
+    
+
+  </body>
+</html>
+

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SciPy on Tiny Little Things in Data Science</title>
+    <link>https://peterduronelly.github.io/tags/scipy/</link>
+    <description>Recent content in SciPy on Tiny Little Things in Data Science</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2018</copyright>
+    <lastBuildDate>Thu, 13 Sep 2018 11:17:13 +0200</lastBuildDate>
+    
+	<atom:link href="https://peterduronelly.github.io/tags/scipy/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Sparse Matrices in Python</title>
+      <link>https://peterduronelly.github.io/post/sparse-matrices-in-python/</link>
+      <pubDate>Thu, 13 Sep 2018 11:17:13 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/sparse-matrices-in-python/</guid>
+      <description>One of the things we need to manage in data analysis is recources. When we have large amounts of (&amp;lsquo;big&amp;rsquo;) data this can become a serious issue. One of the cases when we need to consider whether we really need all the data we have is when we have a lot of zeros in our database, and these zeroes happen to be irrelevant for our calculations. Python&amp;rsquo;s SciPy library has a solution to store and handle sparse data matrices which contain a large number of irrelevant zero values.</description>
+    </item>
+    
+  </channel>
+</rss>

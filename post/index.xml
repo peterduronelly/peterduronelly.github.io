@@ -13,6 +13,15 @@
     
     
     <item>
+      <title>Sparse Matrices in Python</title>
+      <link>https://peterduronelly.github.io/post/sparse-matrices-in-python/</link>
+      <pubDate>Thu, 13 Sep 2018 11:17:13 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/sparse-matrices-in-python/</guid>
+      <description>One of the things we need to manage in data analysis is recources. When we have large amounts of (&amp;lsquo;big&amp;rsquo;) data this can become a serious issue. One of the cases when we need to consider whether we really need all the data we have is when we have a lot of zeros in our database, and these zeroes happen to be irrelevant for our calculations. Python&amp;rsquo;s SciPy library has a solution to store and handle sparse data matrices which contain a large number of irrelevant zero values.</description>
+    </item>
+    
+    <item>
       <title>Introduction</title>
       <link>https://peterduronelly.github.io/post/test/</link>
       <pubDate>Mon, 10 Sep 2018 11:55:58 +0200</pubDate>
