@@ -4,6 +4,14 @@
     
     <url>
     
+      <loc>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</loc>
+      <lastmod>2018-09-14T10:33:36+02:00</lastmod>
+    </url>
+    
+  
+    
+    <url>
+    
       <loc>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</loc>
       <lastmod>2018-09-13T13:39:08+02:00</lastmod>
     </url>
@@ -60,6 +68,15 @@
     
     <url>
     
+      <loc>https://peterduronelly.github.io/tags/clustering/</loc>
+      <lastmod>2018-09-14T10:33:36+02:00</lastmod>
+      <priority>0</priority>
+    </url>
+    
+  
+    
+    <url>
+    
       <loc>https://peterduronelly.github.io/publication_types/</loc>
       <priority>0</priority>
     </url>
@@ -69,7 +86,7 @@
     <url>
     
       <loc>https://peterduronelly.github.io/tags/python/</loc>
-      <lastmod>2018-09-13T11:17:13+02:00</lastmod>
+      <lastmod>2018-09-14T10:33:36+02:00</lastmod>
       <priority>0</priority>
     </url>
     
@@ -87,7 +104,7 @@
     <url>
     
       <loc>https://peterduronelly.github.io/tags/scipy/</loc>
-      <lastmod>2018-09-13T11:17:13+02:00</lastmod>
+      <lastmod>2018-09-14T10:33:36+02:00</lastmod>
       <priority>0</priority>
     </url>
     
@@ -96,7 +113,7 @@
     <url>
     
       <loc>https://peterduronelly.github.io/tags/</loc>
-      <lastmod>2018-09-13T11:17:13+02:00</lastmod>
+      <lastmod>2018-09-14T10:33:36+02:00</lastmod>
       <priority>0</priority>
     </url>
     

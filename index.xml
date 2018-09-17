@@ -11,6 +11,220 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Clustering on a Dissimilarity Matrix</title>
+      <link>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</link>
+      <pubDate>Fri, 14 Sep 2018 10:33:36 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</guid>
+      <description>&lt;p&gt;Clustering is one of the well-known unsupervised learning tools. In the standard case you have an observation matrix
+where observations are in rows and variables which describe them are in columns. But data can also be structured in a different
+way, just like the distance matrix on a map. In this case observations are by &lt;em&gt;both rows and columns&lt;/em&gt; and each element in the
+observation matrix is a measure of distance, or &lt;em&gt;dissimilarity&lt;/em&gt;, between any two observations. This structure can also serve as
+a basis for clustering, just as you can cluster cities based on the respective distances between any two of them.&lt;/p&gt;
+
+&lt;p&gt;When I first encountered this problem I did not find a solution in the standard &lt;em&gt;scikit-learn&lt;/em&gt; library which you automatically call
+when doing a clustering exercise. &lt;em&gt;SciPy&lt;/em&gt;, fortunately, has a solution. Let&amp;rsquo;s see how it works!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import math
+from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The exercise is done on the hundred largest US cities. The list is coming from
+&lt;a href=&#34;https://gist.github.com/Miserlou/c5cd8364bf9b2420bb29#file-cities-json&#34; target=&#34;_blank&#34;&gt;https://gist.github.com/Miserlou/c5cd8364bf9b2420bb29#file-cities-json&lt;/a&gt; in a very neat format.
+(Thanks to &lt;a href=&#34;https://gist.github.com/Miserlou&#34; target=&#34;_blank&#34;&gt;Rick Jones&lt;/a&gt; for the data!)
+It includes not only the city, the state and the population but the latitude/longitude coordinates of the cities
+wich can be used to calculate an approximate distance measure between the cities.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;filepath = ...
+cities = pd.read_json(filepath)
+cities.head()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/03_clustering_dissimilarity_01_resized.jpg&#34; alt=&#34;alt text&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;By selecting the top 100 cities we get sufficient number of observations and we are still able to interpret the result through simple
+visualization.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;top100 = cities[0:100]
+
+fig = plt.figure()
+ax = fig.add_axes([0,0,1,1])
+ax = plt.scatter(top100[&amp;quot;longitude&amp;quot;], top100[&amp;quot;latitude&amp;quot;])
+plt.title(&amp;quot;The Locations of the 100 Largest US Cities&amp;quot;)
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/03_clustering_dissimilarity_02_resized.jpg&#34; alt=&#34;alt text&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;A more fancy map could be generated using the &lt;a href=&#34;https://python-visualization.github.io/folium/docs-v0.6.0/&#34; target=&#34;_blank&#34;&gt;&lt;em&gt;folium&lt;/em&gt; package&lt;/a&gt; but this
+simple scatter plot is sufficient for our purposes. As all real, non-simulated data, our city dataset does not show a very obvious pattern.
+Cities are scattered seemingly randomly on the map, and we have two outliers, Anchorage on the North-West and Honolulu on the South-West, which are
+very far from all other points.&lt;/p&gt;
+
+&lt;p&gt;Now let&amp;rsquo;s calculate the distances between the cities using the geopy package. The distances can be interpreted as &lt;em&gt;dissimilarities&lt;/em&gt;:
+the larger the distance between two observations the less similar they are. This is may literally not be the case with cities
+(two distant cities can easily be alike), but when we think in a more abstract space the concept makes sense.
+Also, city clusters are interpretedin terms of geographical distances, so using them in this exercise helps us
+understand the method and its results.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;distance_matrix = np.empty(shape = [100,100])
+
+for i in range(100):
+    for j in range(100):
+        coords_i = (top100.iloc[i][&amp;quot;latitude&amp;quot;], top100.iloc[i][&amp;quot;longitude&amp;quot;])
+        coords_j = (top100.iloc[j][&amp;quot;latitude&amp;quot;], top100.iloc[j][&amp;quot;longitude&amp;quot;])
+        distance_matrix[i,j] = geopy.distance.vincenty(coords_i, coords_j).km
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Before we move on to build the clusters and visualize the results let&amp;rsquo;s create a list of city names where the name of each city is
+followed by the state. This helps us interpret the cluster tree, the so-called &lt;em&gt;&amp;lsquo;dendrogram&amp;rsquo;&lt;/em&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;cities[&amp;quot;city, state&amp;quot;] = top100[&amp;quot;city&amp;quot;].map(str) + &amp;quot;, &amp;quot; + top100[&amp;quot;state&amp;quot;]
+citynames = cities[&amp;quot;city, state&amp;quot;][0:100].tolist()
+citynames[0:10]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;[&amp;lsquo;New York, New York&amp;rsquo;,&lt;br&gt;
+&amp;nbsp;&amp;lsquo;Los Angeles, California&amp;rsquo;, &lt;br&gt;
+&amp;nbsp; &amp;lsquo;Chicago, Illinois&amp;rsquo;, &lt;br&gt;
+&amp;nbsp;&amp;lsquo;Houston, Texas&amp;rsquo;, &lt;br&gt;
+&amp;nbsp;&amp;lsquo;Philadelphia, Pennsylvania&amp;rsquo;, &lt;br&gt;
+&amp;nbsp;&amp;lsquo;Phoenix, Arizona&amp;rsquo;,&lt;br&gt;
+&amp;nbsp;&amp;lsquo;San Antonio, Texas&amp;rsquo;,&lt;br&gt;
+&amp;nbsp;&amp;lsquo;San Diego, California&amp;rsquo;,&lt;br&gt;
+&amp;nbsp;&amp;lsquo;Dallas, Texas&amp;rsquo;,&lt;br&gt;
+&amp;nbsp;&amp;lsquo;San Jose, California&amp;rsquo;]&lt;/p&gt;
+
+&lt;p&gt;No we get to the most important part! The meat of the module is the &lt;em&gt;linkage function&lt;/em&gt; (&lt;em&gt;scipy.cluster.hierarchy.linkage(…)&lt;/em&gt;),
+which runs the actual clustering algorithms. It can handle both an &lt;em&gt;n x n&lt;/em&gt; distance matrix and a regular &lt;em&gt;n x m&lt;/em&gt; observation matrix
+as input. If we form the clusters on a distance matrix, we need its condensed format: the upper diagonal elements
+(excluding the diagonals) have to be converted into a vector (a list) with a length of &lt;em&gt;n(n-1)/2&lt;/em&gt;.
+The output is a &lt;em&gt;(n-1)x4&lt;/em&gt; NumPy array &lt;strong&gt;&lt;em&gt;Z&lt;/em&gt;&lt;/strong&gt;, called &lt;em&gt;linkage matrix&lt;/em&gt;, which contains the hierarchical clustering algorithm’s encoded results.&lt;/p&gt;
+
+&lt;p&gt;Each row in &lt;strong&gt;&lt;em&gt;Z&lt;/em&gt;&lt;/strong&gt; represents one iteration. In each row &lt;em&gt;i&lt;/em&gt;, clusters with indices of &lt;strong&gt;&lt;em&gt;Z&lt;/em&gt;&lt;/strong&gt;&lt;em&gt;[i,0]&lt;/em&gt; and &lt;strong&gt;&lt;em&gt;Z&lt;/em&gt;&lt;/strong&gt;&lt;em&gt;[i,1]&lt;/em&gt; are combined in a
+new cluster, based on the distance between them which is in &lt;strong&gt;&lt;em&gt;Z&lt;/em&gt;&lt;/strong&gt;&lt;em&gt;[i,2]&lt;/em&gt;. The number of elements in the newly formed cluster is &lt;strong&gt;&lt;em&gt;Z&lt;/em&gt;&lt;/strong&gt;&lt;em&gt;[i,3]&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is a &lt;em&gt;hierarchical clustering&lt;/em&gt; method: we start with elementary clusters (the observations) which are
+merged into larger and larger clusters. At the end all observations form a single cluster.&lt;/p&gt;
+
+&lt;p&gt;Clusters contain observations which are close to each other. Closeness can be defined between observations (cluster elements) and the
+clusters themselves. To calculate distances between two clusters we need to define two parameters:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;We need to define a &lt;em&gt;distance metric&lt;/em&gt;, which measures the distances between the elements of one cluster and
+the elements of the other cluster. The default is the Euclidean distance which is sufficient for our clustering project.&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;We also need to define a &lt;em&gt;method&lt;/em&gt; to sum up the distances between the individual elements of two clusters to come up
+with a single value for the distance between them. Just as in the case of the measures of central tendency, we are looking
+for the &lt;em&gt;typical distance&lt;/em&gt; between the elements of any two clusters. The &lt;em&gt;method&lt;/em&gt; sets how this typical distance is defined.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;While the distance metric can also make a difference, the most important parameter in cluster formation is the &lt;em&gt;method&lt;/em&gt;.
+There are various options (methods) to define how far two clusters are from each other: the distance between the two closest
+elements, or the one between two most distant ones, or some sort of average of the distances between elements of cluster
+&lt;em&gt;a&lt;/em&gt; and cluster &lt;em&gt;b&lt;/em&gt;, etc. If cluster &lt;em&gt;a&lt;/em&gt; and cluster &lt;em&gt;b&lt;/em&gt; have &lt;em&gt;u&lt;/em&gt; and &lt;em&gt;v&lt;/em&gt; number of elements, respectively, we will have &lt;em&gt;u*v&lt;/em&gt;
+distances which we can use to find the distance between clusters &lt;em&gt;a&lt;/em&gt; and &lt;em&gt;b&lt;/em&gt;. This is the modeler’s choice and, as I will
+show it later, it can create markedly different cluster structures. The methods are very well explained in the &lt;a href=&#34;http://scipy.github.io/devdocs/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage&#34; target=&#34;_blank&#34;&gt;SciPy
+documentation&lt;/a&gt;
+and I urge you to check it out. At this point, however, we only need to keep in mind that the method is the most important
+parameter we need to set.&lt;/p&gt;
+
+&lt;p&gt;The most evident difference between clustering methods is how they handle outliers (Anchorage and Honolulu). We will see
+that merging the mainland and the coastal areas will be completely different in some cases.&lt;/p&gt;
+
+&lt;p&gt;And now comes the trick! SciPy does not use the whole dissimilarity matrix for the calculations, only a list of the upper
+diagonal elements. The length of the list is &lt;em&gt;n(n-1)/2&lt;/em&gt; and SciPy automatically calculates the number of observations
+it needs to cluster.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;l = [] # upper triangular elements of the distance matrix 
+
+for i in range(0, distance_matrix.shape[0]):
+    for j in range(i + 1, distance_matrix.shape[0]):
+        l.append(distance_matrix[i,j])
+
+Z = linkage(l, method=&amp;quot;ward&amp;quot;) # this is the meat of the thing!
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once we have the linkage matrix, which is basically a log of which observation or cluster got merged in each step,
+we can visualize the results.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;fig = plt.figure(figsize=(25, 10))
+plt.title(&amp;quot;Hierarchical Clustering Dendrogram\nLinkage = ward&amp;quot;)
+plt.xlabel(&#39;city, state&#39;)
+plt.ylabel(&#39;distance&#39;)
+dn = dendrogram(Z,
+               labels = citynames,
+    leaf_rotation=90.,
+    leaf_font_size=10.,
+    show_contracted=True)
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/03_clustering_dissimilarity_03_resized.jpg&#34; alt=&#34;alt text&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;First we used the &lt;em&gt;&amp;lsquo;ward&amp;rsquo;&lt;/em&gt; method which is an optimization algorithm: it aims to minimize within-cluster variance.
+Cities belong to two major clusters: the ones with green linkages can be called &amp;lsquo;The West&amp;rsquo;, while the ones with red linkages
+can be considered &amp;lsquo;The East&amp;rsquo; or &amp;lsquo;East + Midwest&amp;rsquo;.
+Our outliers (Anchorage and Honolulu) belong to the West, which makes sense, and they form a
+cluster together before being linked to the other Western cities. Before they are linked, however, mainland Western/West Coast
+cities are merged into clusters at higher and higher levels of aggregation. Only then come the two overseas cities.&lt;/p&gt;
+
+&lt;p&gt;Cities in Arizona are merged into their own clusters, then Nevada and California. Boise City, Idaho goes to Nevada/California
+after being merged with the cluster formed by Seattle and Portland. Everything else belong to the East Coast,
+including cities in Minnesota, Wisconsin and Texas. The dendrogram is sort of ‘smooth’ or ‘balanced’, thanks to
+the algorithm&amp;rsquo;s variance minimalization.&lt;/p&gt;
+
+&lt;p&gt;The vertical axis shows the distance, or the level of dissimilarities between the clusters. The longer the vertical lines the more
+dissimilar the two clusters which are merged in that step. The lenght of the two vertical blue lines shows
+that this method considers the West Coast, which includes the outlier cities, is very different from everything else.&lt;/p&gt;
+
+&lt;p&gt;The structure changes a lot when cluster distances are defined as the average distance between the members of the two clusters.
+The fact that cluster formation is not variance-optimized results in an unbalanced-looking tree.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;Z = linkage(l, method=&amp;quot;average&amp;quot;)
+
+fig = plt.figure(figsize=(25, 10))
+plt.title(&amp;quot;Hierarchical Clustering Dendrogram\nLinkage = average&amp;quot;)
+plt.xlabel(&#39;city, state&#39;)
+plt.ylabel(&#39;distance&#39;)
+dn = dendrogram(Z,
+               labels = citynames,
+    leaf_rotation=90.,
+    leaf_font_size=10.,
+    show_contracted=True)
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/03_clustering_dissimilarity_04_resized.jpg&#34; alt=&#34;alt text&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The most visible difference, as I mentioned before, is how the outliers are handled. Here they are merged
+with other mainland cities only at the end, &lt;em&gt;only after&lt;/em&gt; the other 98 cities have been joined together. There is
+more emphasis on their uniqueness then before, when within-cluster variance ruled cluster formation. East
+Coast and West Coast are made up from mostly the same cities as before, but their aggregation, from individual
+cities to larger and larger formations has a somewhat different profile.&lt;/p&gt;
+
+&lt;p&gt;It is also interesting to see how the trio of Boise City and Seattle &amp;amp; Portland is linked to Arizona and California.
+In the ‘ward’ optimization mechanism they are merged with California before they together are put together with
+Arizona. In this latter case Arizona, California and Nevada are merged before the trio of Boise, Seattle &amp;amp; Portland
+joins them as the last West Coast areas.&lt;/p&gt;
+
+&lt;p&gt;No one is better than the other, and both the nature of the data and the target of the modeling exercise are
+important in selecting the best method. In the case of the US cities, for example, if we think that the mainland
+cities share more with each other than with Anchorage or Honolulu, ‘average’ is a better choice. If we simply want
+a split into East and West, then ‘ward’ will be our method.&lt;/p&gt;
+
+&lt;p&gt;As a summary: clustering is possible in Python when the data does not come as an &lt;em&gt;n x p&lt;/em&gt; matrix of &lt;em&gt;n&lt;/em&gt; observations
+and &lt;em&gt;p&lt;/em&gt; variables, but as an &lt;em&gt;n x n&lt;/em&gt; dissimilarity or distance matrix. The home of the algorithm is the SciPy package,
+and depending on the method, we can have very different results.&lt;/p&gt;
+
+&lt;p&gt;The codes are at the &lt;a href=&#34;https://github.com/peterduronelly/blogcodes/blob/master/03-Clustering-Based-On-A-Distance-Matrix.ipynb&#34; target=&#34;_blank&#34;&gt;usual place&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Text Complexity Analysis of Beatles Lyrics With R</title>
       <link>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</link>
       <pubDate>Thu, 13 Sep 2018 13:39:08 +0200</pubDate>
@@ -18,10 +232,10 @@
       <guid>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</guid>
       <description>
 
-&lt;p&gt;The Beatles became hit through its powerful music but it is not famous for its poetry. But the group&amp;rsquo;s
-lyrics did change during the band&amp;rsquo;s short existence and we can use text analysis to track these changes.
-This post is about measuring the change in the complexity of the group&amp;rsquo;s lyrics, from Please, Please Me
-to Abbey Road, showing how we can use basic data secience tools to find really fancy patterns in unstructured
+&lt;p&gt;The Beatles became a hit through its sometimes but always powerful music but it has never been famous for its poetry. The group&amp;rsquo;s
+lyrics, however, did change during the band&amp;rsquo;s short existence and we can use text analysis to track these changes.
+This post is about measuring the change in the complexity of the group&amp;rsquo;s lyrics, from the Please, Please Me
+to the Abbey Road albums, showing how we can use basic data secience tools to find really fancy patterns in unstructured
 text data.&lt;/p&gt;
 
 &lt;p&gt;This piece is a shortened version of a final project for a Data Science
@@ -406,6 +620,8 @@ uniqueness of the St. Pepper&amp;rsquo;s album.&lt;/p&gt;
 
 &lt;p&gt;Among the tools, tidytext, syllable, and of course the geniusR packages
 were used to compile this report.&lt;/p&gt;
+
+&lt;p&gt;Codes can be found at &lt;a href=&#34;https://github.com/peterduronelly/blogcodes/blob/master/02-Text-Complexity-Analysis-Of-Beatles_Lyrics-With-R.R&#34; target=&#34;_blank&#34;&gt;https://github.com/peterduronelly/blogcodes/blob/master/02-Text-Complexity-Analysis-Of-Beatles_Lyrics-With-R.R&lt;/a&gt;.&lt;/p&gt;
 </description>
     </item>
     
@@ -558,6 +774,8 @@ sparse matrix to our project.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;save_npz(&#39;/path...&#39;, mx)
 &lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The codes can be find at &lt;a href=&#34;https://github.com/peterduronelly/blogcodes/blob/master/01-Sparse-Matrices-in-Python.ipynb&#34; target=&#34;_blank&#34;&gt;my github&lt;/a&gt;.&lt;/p&gt;
 </description>
     </item>
     

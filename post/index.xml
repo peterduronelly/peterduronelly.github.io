@@ -13,12 +13,21 @@
     
     
     <item>
+      <title>Clustering on a Dissimilarity Matrix</title>
+      <link>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</link>
+      <pubDate>Fri, 14 Sep 2018 10:33:36 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</guid>
+      <description>Clustering is one of the well-known unsupervised learning tools. In the standard case you have an observation matrix where observations are in rows and variables which describe them are in columns. But data can also be structured in a different way, just like the distance matrix on a map. In this case observations are by both rows and columns and each element in the observation matrix is a measure of distance, or dissimilarity, between any two observations.</description>
+    </item>
+    
+    <item>
       <title>Text Complexity Analysis of Beatles Lyrics With R</title>
       <link>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</link>
       <pubDate>Thu, 13 Sep 2018 13:39:08 +0200</pubDate>
       
       <guid>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</guid>
-      <description>The Beatles became hit through its powerful music but it is not famous for its poetry. But the group&amp;rsquo;s lyrics did change during the band&amp;rsquo;s short existence and we can use text analysis to track these changes. This post is about measuring the change in the complexity of the group&amp;rsquo;s lyrics, from Please, Please Me to Abbey Road, showing how we can use basic data secience tools to find really fancy patterns in unstructured text data.</description>
+      <description>The Beatles became a hit through its sometimes but always powerful music but it has never been famous for its poetry. The group&amp;rsquo;s lyrics, however, did change during the band&amp;rsquo;s short existence and we can use text analysis to track these changes. This post is about measuring the change in the complexity of the group&amp;rsquo;s lyrics, from the Please, Please Me to the Abbey Road albums, showing how we can use basic data secience tools to find really fancy patterns in unstructured text data.</description>
     </item>
     
     <item>

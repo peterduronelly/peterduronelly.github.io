@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>SciPy on Tiny Little Things in Data Science</title>
-    <link>https://peterduronelly.github.io/tags/scipy/</link>
-    <description>Recent content in SciPy on Tiny Little Things in Data Science</description>
+    <title>Clustering on Tiny Little Things in Data Science</title>
+    <link>https://peterduronelly.github.io/tags/clustering/</link>
+    <description>Recent content in Clustering on Tiny Little Things in Data Science</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
     <lastBuildDate>Fri, 14 Sep 2018 10:33:36 +0200</lastBuildDate>
     
-	<atom:link href="https://peterduronelly.github.io/tags/scipy/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://peterduronelly.github.io/tags/clustering/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -19,15 +19,6 @@
       
       <guid>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</guid>
       <description>Clustering is one of the well-known unsupervised learning tools. In the standard case you have an observation matrix where observations are in rows and variables which describe them are in columns. But data can also be structured in a different way, just like the distance matrix on a map. In this case observations are by both rows and columns and each element in the observation matrix is a measure of distance, or dissimilarity, between any two observations.</description>
-    </item>
-    
-    <item>
-      <title>Sparse Matrices in Python</title>
-      <link>https://peterduronelly.github.io/post/sparse-matrices-in-python/</link>
-      <pubDate>Thu, 13 Sep 2018 11:17:13 +0200</pubDate>
-      
-      <guid>https://peterduronelly.github.io/post/sparse-matrices-in-python/</guid>
-      <description>One of the things we need to manage in data analysis is recources. When we have large amounts of (&amp;lsquo;big&amp;rsquo;) data this can become a serious issue. One of the cases when we need to consider whether we really need all the data we have is when we have a lot of zeros in our database, and these zeroes happen to be irrelevant for our calculations. Python&amp;rsquo;s SciPy library has a solution to store and handle sparse data matrices which contain a large number of irrelevant zero values.</description>
     </item>
     
   </channel>

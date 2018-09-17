@@ -7,10 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
-    <lastBuildDate>Thu, 13 Sep 2018 11:17:13 +0200</lastBuildDate>
+    <lastBuildDate>Fri, 14 Sep 2018 10:33:36 +0200</lastBuildDate>
     
 	<atom:link href="https://peterduronelly.github.io/tags/python/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Clustering on a Dissimilarity Matrix</title>
+      <link>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</link>
+      <pubDate>Fri, 14 Sep 2018 10:33:36 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</guid>
+      <description>Clustering is one of the well-known unsupervised learning tools. In the standard case you have an observation matrix where observations are in rows and variables which describe them are in columns. But data can also be structured in a different way, just like the distance matrix on a map. In this case observations are by both rows and columns and each element in the observation matrix is a measure of distance, or dissimilarity, between any two observations.</description>
+    </item>
     
     <item>
       <title>Sparse Matrices in Python</title>
