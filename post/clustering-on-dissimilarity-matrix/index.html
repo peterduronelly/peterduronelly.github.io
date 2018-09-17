@@ -346,7 +346,7 @@ very far from all other points.</p>
 <p>Now let&rsquo;s calculate the distances between the cities using the geopy package. The distances can be interpreted as <em>dissimilarities</em>:
 the larger the distance between two observations the less similar they are. This is may literally not be the case with cities
 (two distant cities can easily be alike), but when we think in a more abstract space the concept makes sense.
-Also, city clusters are interpretedin terms of geographical distances, so using them in this exercise helps us
+Also, city clusters are interpreted in terms of geographical distances, so using them in this exercise helps us
 understand the method and its results.</p>
 
 <pre><code class="language-python">distance_matrix = np.empty(shape = [100,100])
@@ -458,7 +458,7 @@ the algorithm&rsquo;s variance minimalization.</p>
 
 <p>The vertical axis shows the distance, or the level of dissimilarities between the clusters. The longer the vertical lines the more
 dissimilar the two clusters which are merged in that step. The lenght of the two vertical blue lines shows
-that this method considers the West Coast, which includes the outlier cities, is very different from everything else.</p>
+that this method considers the West Coast, which includes the outlier cities, to be very different from everything else.</p>
 
 <p>The structure changes a lot when cluster distances are defined as the average distance between the members of the two clusters.
 The fact that cluster formation is not variance-optimized results in an unbalanced-looking tree.</p>
@@ -481,7 +481,7 @@ plt.show()
 
 <p>The most visible difference, as I mentioned before, is how the outliers are handled. Here they are merged
 with other mainland cities only at the end, <em>only after</em> the other 98 cities have been joined together. There is
-more emphasis on their uniqueness then before, when within-cluster variance ruled cluster formation. East
+more emphasis on their uniqueness than before, when within-cluster variance ruled cluster formation. East
 Coast and West Coast are made up from mostly the same cities as before, but their aggregation, from individual
 cities to larger and larger formations has a somewhat different profile.</p>
 
