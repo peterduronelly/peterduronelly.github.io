@@ -11,6 +11,79 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Bootstrap Samples</title>
+      <link>https://peterduronelly.github.io/post/bootstrap-samples/</link>
+      <pubDate>Sun, 23 Sep 2018 20:28:32 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/bootstrap-samples/</guid>
+      <description>&lt;p&gt;Bootstrap sampling is a widely used method in machine learning and in statistics.
+The main idea is that we try to decrease overfitting and the chance of myopic tree-building
+if run our algorithm multiple times using the same data, but always taking a different sample
+with repetitions from our original data. (For instance, random forest builds the trees using
+repeated bootstrap samples.) On a machine learning class one of my class mates asked what
+percentage of the original data shows up in the bootstrapped sample. Let’s have a look!&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import random
+import matplotlib.pyplot as plt
+%matplotlib inline
+import pandas as pd
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In bootstrap samples we select elements from our original sample in the same number as the
+size of the original data at hand using repetitions. This is a poster case for Central Limit
+Theorem, thus the expected value of our sample mean will be bang in line with the mean of
+the original data.&lt;/p&gt;
+
+&lt;p&gt;Let’s have a dataset of 1,000 observations, from which we take 10,000 samples of 1,000 elements.
+This number of sampling helps us visualize and calculate our sample properties.&lt;/p&gt;
+
+&lt;p&gt;When bootstrapping, some original observations show up multiple times and some others will
+be missing from the bootstrapped samples. We are about finding the number of distinct elements
+in the bootstrapped samples. If the samples are lists, then turning these lists into sets
+helps us calculate the number of distinct elements, since sets don’t have the same value
+more than once.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;sample_sizes = []
+for i in range(10000):
+    sample = []
+    for j in range(1000):
+        sample.append(round(random.randint(1,1000)))
+    sample_sizes.append(len(set(sample)))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Turning the sample size list into a data frame we can easily get the most basic statistics.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;df = pd.DataFrame(sample_sizes)
+df.columns = [&amp;quot;sample sizes&amp;quot;]
+df.describe().style.format(&#39;{:.2f}&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/04_bootstrap_01_resized.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We have taken 10,000 samples of 1,000 observations with repetitions from the 1,000 observations.
+On average, 632 observations show up in the bootstrapped samples, and this number is between
+625 and 639 in the half of the samples. These results are extremely stable: if you run this
+simulation multiple times the average will always be 632.&lt;/p&gt;
+
+&lt;p&gt;It shouldn’t come as a surprise that the distribution of the number of distinct elements is almost
+perfectly normal.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;fig = plt.figure(figsize = (10,6))
+
+plt.hist(df[&amp;quot;sample sizes&amp;quot;], bins = list(range(590, 680, 2)), rwidth=0.9, color = &#39;k&#39;)
+plt.title(&amp;quot;Bootstrap sample sizes\noriginal sample size = 1000&amp;quot;)
+plt.xlabel(&amp;quot;number of distinct elements in the sample&amp;quot;)
+plt.ylabel(&amp;quot;frequency&amp;quot;)
+plt.show()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/04_bootstrap_02_resized.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Codas are at the &lt;a href=&#34;https://github.com/peterduronelly/blogcodes/blob/master/04-Bootstrap-Samples.ipynb&#34; target=&#34;_blank&#34;&gt;usual place&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Clustering on a Dissimilarity Matrix</title>
       <link>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</link>
       <pubDate>Fri, 14 Sep 2018 10:33:36 +0200</pubDate>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Sampling on Tiny Little Things in Data Science</title>
+    <link>https://peterduronelly.github.io/tags/sampling/</link>
+    <description>Recent content in Sampling on Tiny Little Things in Data Science</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2018</copyright>
+    <lastBuildDate>Sun, 23 Sep 2018 20:28:32 +0200</lastBuildDate>
+    
+	<atom:link href="https://peterduronelly.github.io/tags/sampling/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Bootstrap Samples</title>
+      <link>https://peterduronelly.github.io/post/bootstrap-samples/</link>
+      <pubDate>Sun, 23 Sep 2018 20:28:32 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/bootstrap-samples/</guid>
+      <description>Bootstrap sampling is a widely used method in machine learning and in statistics. The main idea is that we try to decrease overfitting and the chance of myopic tree-building if run our algorithm multiple times using the same data, but always taking a different sample with repetitions from our original data. (For instance, random forest builds the trees using repeated bootstrap samples.) On a machine learning class one of my class mates asked what percentage of the original data shows up in the bootstrapped sample.</description>
+    </item>
+    
+  </channel>
+</rss>

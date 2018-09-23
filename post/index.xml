@@ -13,6 +13,15 @@
     
     
     <item>
+      <title>Bootstrap Samples</title>
+      <link>https://peterduronelly.github.io/post/bootstrap-samples/</link>
+      <pubDate>Sun, 23 Sep 2018 20:28:32 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/bootstrap-samples/</guid>
+      <description>Bootstrap sampling is a widely used method in machine learning and in statistics. The main idea is that we try to decrease overfitting and the chance of myopic tree-building if run our algorithm multiple times using the same data, but always taking a different sample with repetitions from our original data. (For instance, random forest builds the trees using repeated bootstrap samples.) On a machine learning class one of my class mates asked what percentage of the original data shows up in the bootstrapped sample.</description>
+    </item>
+    
+    <item>
       <title>Clustering on a Dissimilarity Matrix</title>
       <link>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</link>
       <pubDate>Fri, 14 Sep 2018 10:33:36 +0200</pubDate>

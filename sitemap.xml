@@ -4,6 +4,14 @@
     
     <url>
     
+      <loc>https://peterduronelly.github.io/post/bootstrap-samples/</loc>
+      <lastmod>2018-09-23T20:28:32+02:00</lastmod>
+    </url>
+    
+  
+    
+    <url>
+    
       <loc>https://peterduronelly.github.io/post/clustering-on-dissimilarity-matrix/</loc>
       <lastmod>2018-09-14T10:33:36+02:00</lastmod>
     </url>
@@ -96,6 +104,15 @@
     
       <loc>https://peterduronelly.github.io/tags/r/</loc>
       <lastmod>2018-09-13T13:39:08+02:00</lastmod>
+      <priority>0</priority>
+    </url>
+    
+  
+    
+    <url>
+    
+      <loc>https://peterduronelly.github.io/tags/sampling/</loc>
+      <lastmod>2018-09-23T20:28:32+02:00</lastmod>
       <priority>0</priority>
     </url>
     
