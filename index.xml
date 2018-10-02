@@ -11,6 +11,160 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Robust and Clustered Standard Errors in Stargazer</title>
+      <link>https://peterduronelly.github.io/post/robust-and-clustered-standard-errors-in-stargazer/</link>
+      <pubDate>Tue, 02 Oct 2018 14:14:34 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/robust-and-clustered-standard-errors-in-stargazer/</guid>
+      <description>
+
+&lt;p&gt;Stargazer is a neat tool to present model estimates. It accepts a fairly large number of object-types and creates nice-looking, ready-to-publish outputs of their main parameters. In many cases, however, the default settings do not give us the proper numerical results, and customizing the output is not that straightforward. This is part one in a two-part series on how to customize stargazer.&lt;/p&gt;
+
+&lt;p&gt;When I first encountered stargazer I already had a problem with the model outputs the package created: in cross-sectional data the observations are often of different sizes, which leads to heteroskedastic model residuals where simple standard errors are useless for measuring variable significance. Heteroskedasticity requires &lt;em&gt;‘robust’&lt;/em&gt; standard errors to calculate p-values, but there is no flag in stargazer to switch from simple to robust standard errors. The same problem emerges with panel models, where, for basically the same reason, &lt;em&gt;‘clustered’&lt;/em&gt; standard errors need to be calculated and applied. If the output is based on the wrong errors, then the model cannot be presented with stargazer. However, I haven’t been able to find any other package which can create such a tidily formatted model output.&lt;/p&gt;
+
+&lt;p&gt;The good news is that stargazer can be fed externally with the right standard errors, which then results in the proper output. This post shows you how.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;library(wbstats) # to retrieve World Bank development data to demonstrate stargazer functionalities
+library(dplyr)
+library(data.table)
+library(plm)
+library(stargazer) # this is the package what we are interested in
+library(sandwich) # to calculate robust and clustered stanard errors
+library(pander)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I am using the &lt;em&gt;wbstats&lt;/em&gt; package to download data from the World Bank development database. As countries are of different sizes, running a regression of any kind requires ‘non-standard’ standard errors to calculate variable significance. We will do a cross-section and a panel regression to demonstrate stargazer options.&lt;/p&gt;
+
+&lt;p&gt;In a simple model I try to explain the number of patent applications in a country with real PPP GDP and population size. The goal of this exercise is not about building the right model, the regressions are for demonstrational purposes only.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;data &amp;lt;- wb(indicator = c(&amp;quot;NY.GDP.MKTP.PP.KD&amp;quot;, # WB (World Bank) code for PPP GDP per capita in 2011 $
+                         &amp;quot;IP.PAT.RESD&amp;quot;, # WB code for patent applications by residents
+                         &amp;quot;SP.POP.TOTL&amp;quot;), # WB code for population
+                       startdate = 2000, 
+                       enddate = 2015)
+
+countries &amp;lt;- wbcountries() 
+
+data &amp;lt;- merge(data, countries[c(&amp;quot;iso2c&amp;quot;, &amp;quot;region&amp;quot;)], 
+                          by = &amp;quot;iso2c&amp;quot;, all.x = TRUE)
+data &amp;lt;- subset(subset(data, region != &amp;quot;Aggregates&amp;quot;))
+
+data$indicatorID[data$indicatorID == &amp;quot;NY.GDP.MKTP.PP.KD&amp;quot;] &amp;lt;- &amp;quot;GDP&amp;quot;
+data$indicatorID[data$indicatorID == &amp;quot;IP.PAT.RESD&amp;quot;] &amp;lt;- &amp;quot;patent_applications&amp;quot;
+data$indicatorID[data$indicatorID == &amp;quot;SP.POP.TOTL&amp;quot;] &amp;lt;- &amp;quot;population&amp;quot;
+
+data &amp;lt;- dcast(data, iso2c + country + date + region ~ indicatorID,  value.var = &#39;value&#39;)
+
+names(data)[names(data) == &amp;quot;date&amp;quot;] &amp;lt;- &amp;quot;year&amp;quot;
+data$year &amp;lt;- as.numeric(data$year)
+data &amp;lt;- data %&amp;gt;%
+  select(-iso2c, -region)
+
+data$population &amp;lt;- data$population / 10^6 # some rescaling
+data$GDP &amp;lt;- data$GDP / 10^9
+
+data &amp;lt;- data[complete.cases(data),]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Without going into the details of the wbstat package we end up with a data frame where country and year are in columns 1 and 2, and the three other variables (GDP in USD bn, patent applications and population in millions) are in columns 3-5. (This is the default format for panels in R.) The panel is only slightly unbalanced: even if a large number of observations is missing the observations with missing values will not make much trouble. (The punbalanced() command measures how unbalanced the panel is, but this is also beyond the scope of this analysis.)&lt;/p&gt;
+
+&lt;p&gt;&lt;br&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;robust-standard-errors&#34;&gt;Robust Standard Errors&lt;/h2&gt;
+
+&lt;p&gt;Now let’s do a simple cross sectional regression for 2011.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;linear_regression &amp;lt;- lm(formula = patent_applications ~ 
+                          GDP + population,
+                        data = data %&amp;gt;% filter(year == 2011))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now comes the trick! The vcov() function in the sandwich package calculates the robust standard errors that we need for coefficient testing when model residuals are heteroskedastic. Vcov gives us the variable covariance matrix, which measures co-dependencies between the variables. It&amp;rsquo;s diagonal elements are the variances of the variables, which are used for variable importance testing. We need to extract these diagonal elements, take their square root, and feed them into &lt;em&gt;stargazer&lt;/em&gt;.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;robust_standard_errors &amp;lt;- vcov(linear_regression, sandwich)
+robust_standard_errors &amp;lt;- sqrt(diag(robust_standard_errors))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Our standard erorrs are the following.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;df = data.frame(robust_standard_errors)
+pander(df)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/05_stargazer_01_resized.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This is the input We can feed into &lt;em&gt;stargazer&lt;/em&gt; using the &lt;em&gt;‘se’&lt;/em&gt; option from the method’s parameter set.
+It is important to note that the object containing the errors should be given as a &lt;em&gt;‘list’&lt;/em&gt;, even if
+we only show one model with stargazer.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;stargazer(linear_regression, title = &amp;quot;Linear regression&amp;quot;, 
+          se = list(robust_standard_errors),
+          type = &amp;quot;html&amp;quot;, out = &amp;quot;linear regression.html&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;em&gt;&amp;lsquo;out&amp;rsquo;&lt;/em&gt; parameter in &lt;em&gt;stargazer&lt;/em&gt; defines the name of the output file we create, and &lt;em&gt;&amp;lsquo;type&amp;rsquo;&lt;/em&gt; defines the file&amp;rsquo;s extension.
+Once we run the command we will get the following (kind of) neatly formatted output which includes our externally fed standard
+errors and the relevant t-statistics based on those standard errors.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/05_stargazer_02_resized.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;clustered-standard-errors&#34;&gt;Clustered Standard Errors&lt;/h2&gt;
+
+&lt;p&gt;Now let’s do two panel regressions using the whole dataset: a fixed-effects (FE) model and a
+first difference (FD) model. We will include both models in our stargazer output for which
+we need to supply two sets of standard errors. What is robust standard errors in cross sectional
+regressions is ‘clustered’ standard errors in panels. This time the vcovHC() function will take
+care of the standard errors.&lt;/p&gt;
+
+&lt;p&gt;First the two panels. As I said before, model validity is not an issue here, I just want to have
+standard errors.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;p_data = pdata.frame(data) # we need to create a &#39;panel data frame&#39; for panel regressions
+
+fe_regression &amp;lt;- plm(patent_applications ~ GDP + population, # FE model
+                     data = p_data,
+                     model = &amp;quot;within&amp;quot;,
+                     effect = &amp;quot;twoways&amp;quot;)
+
+fd_regression &amp;lt;- plm(diff(patent_applications) ~ diff(GDP, lag = 2) + # FD model
+                       diff(diff(GDP), lag = c(0:1)) +
+                       diff(population, lag = 2) + diff(diff(population), lag = c(0:1)),
+                     data = p_data,
+                     model = &#39;pooling&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;From these two models we extract the clustered standard errors the same way, but now with the
+vcocHC() function which handles clustered errors in panel models.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;clustered_standard_errors_fe &amp;lt;- vcovHC(fe_regression, type = &amp;quot;HC0&amp;quot;, cluster = &amp;quot;group&amp;quot;)
+clustered_standard_errors_fe &amp;lt;- sqrt(diag(clustered_standard_errors_fe))
+
+clustered_standard_errors_fd &amp;lt;- vcovHC(fd_regression, type = &amp;quot;HC0&amp;quot;, cluster = &amp;quot;group&amp;quot;)
+clustered_standard_errors_fd &amp;lt;- sqrt(diag(clustered_standard_errors_fd))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once we have the standard errors ready, we add them as stargazer parameters. Note, that they are given
+as lists again.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;stargazer(fe_regression, fd_regression, title = &amp;quot;Panel regressions&amp;quot;, 
+          se = list(clustered_standard_errors_fe, clustered_standard_errors_fd),
+          type = &amp;quot;html&amp;quot;, out = &amp;quot;panel regression.html&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now the &lt;em&gt;stargazer&lt;/em&gt; output looks like this.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/05_stargazer_03_resized.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We have everything we need in our model output, and &lt;em&gt;stargazer&lt;/em&gt; uses the proper standard
+error set for both models to coefficient testing. We even have more than we really need,
+and the labels are kind of messy. There are more options to customize &lt;em&gt;stargazer&lt;/em&gt; and make
+it look better, but it is the subject of the other post on &lt;em&gt;stargazer&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Codes at the &lt;a href=&#34;https://github.com/peterduronelly/blogcodes/blob/master/05-Robust-And-Clustered-Standard-Errors-In-Stargazer.R&#34; target=&#34;_blank&#34;&gt;usual place&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Bootstrap Samples</title>
       <link>https://peterduronelly.github.io/post/bootstrap-samples/</link>
       <pubDate>Sun, 23 Sep 2018 20:28:32 +0200</pubDate>
@@ -79,7 +233,7 @@ plt.show()
 
 &lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/04_bootstrap_02_resized.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
 
-&lt;p&gt;Codas are at the &lt;a href=&#34;https://github.com/peterduronelly/blogcodes/blob/master/04-Bootstrap-Samples.ipynb&#34; target=&#34;_blank&#34;&gt;usual place&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Codes are at the &lt;a href=&#34;https://github.com/peterduronelly/blogcodes/blob/master/04-Bootstrap-Samples.ipynb&#34; target=&#34;_blank&#34;&gt;usual place&lt;/a&gt;.&lt;/p&gt;
 </description>
     </item>
     

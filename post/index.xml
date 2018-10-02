@@ -13,6 +13,16 @@
     
     
     <item>
+      <title>Robust and Clustered Standard Errors in Stargazer</title>
+      <link>https://peterduronelly.github.io/post/robust-and-clustered-standard-errors-in-stargazer/</link>
+      <pubDate>Tue, 02 Oct 2018 14:14:34 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/robust-and-clustered-standard-errors-in-stargazer/</guid>
+      <description>Stargazer is a neat tool to present model estimates. It accepts a fairly large number of object-types and creates nice-looking, ready-to-publish outputs of their main parameters. In many cases, however, the default settings do not give us the proper numerical results, and customizing the output is not that straightforward. This is part one in a two-part series on how to customize stargazer.
+When I first encountered stargazer I already had a problem with the model outputs the package created: in cross-sectional data the observations are often of different sizes, which leads to heteroskedastic model residuals where simple standard errors are useless for measuring variable significance.</description>
+    </item>
+    
+    <item>
       <title>Bootstrap Samples</title>
       <link>https://peterduronelly.github.io/post/bootstrap-samples/</link>
       <pubDate>Sun, 23 Sep 2018 20:28:32 +0200</pubDate>

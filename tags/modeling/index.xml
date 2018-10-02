@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>R on Tiny Little Things in Data Science</title>
-    <link>https://peterduronelly.github.io/tags/r/</link>
-    <description>Recent content in R on Tiny Little Things in Data Science</description>
+    <title>Modeling on Tiny Little Things in Data Science</title>
+    <link>https://peterduronelly.github.io/tags/modeling/</link>
+    <description>Recent content in Modeling on Tiny Little Things in Data Science</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <copyright>&amp;copy; 2018</copyright>
     <lastBuildDate>Tue, 02 Oct 2018 14:14:34 +0200</lastBuildDate>
     
-	<atom:link href="https://peterduronelly.github.io/tags/r/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://peterduronelly.github.io/tags/modeling/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -20,15 +20,6 @@
       <guid>https://peterduronelly.github.io/post/robust-and-clustered-standard-errors-in-stargazer/</guid>
       <description>Stargazer is a neat tool to present model estimates. It accepts a fairly large number of object-types and creates nice-looking, ready-to-publish outputs of their main parameters. In many cases, however, the default settings do not give us the proper numerical results, and customizing the output is not that straightforward. This is part one in a two-part series on how to customize stargazer.
 When I first encountered stargazer I already had a problem with the model outputs the package created: in cross-sectional data the observations are often of different sizes, which leads to heteroskedastic model residuals where simple standard errors are useless for measuring variable significance.</description>
-    </item>
-    
-    <item>
-      <title>Text Complexity Analysis of Beatles Lyrics With R</title>
-      <link>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</link>
-      <pubDate>Thu, 13 Sep 2018 13:39:08 +0200</pubDate>
-      
-      <guid>https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/</guid>
-      <description>The Beatles became a hit through its sometimes simple but always powerful music but it has never been famous for its poetry. The group&amp;rsquo;s lyrics, however, did change during the band&amp;rsquo;s short existence and we can use text analysis to track these changes. This post is about measuring the change in the complexity of the group&amp;rsquo;s lyrics, from the Please, Please Me to the Abbey Road albums, showing how we can use basic data secience tools to find really fancy patterns in unstructured text data.</description>
     </item>
     
   </channel>

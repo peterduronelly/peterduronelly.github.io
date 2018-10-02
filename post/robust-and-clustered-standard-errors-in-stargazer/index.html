@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="generator" content="Source Themes Academic 2.4.0">
+  <meta name="generator" content="Hugo 0.48" />
+  <meta name="author" content="Peter Duronelly">
+
+  
+  
+  
+  
+    
+  
+  <meta name="description" content="Stargazer is a neat tool to present model estimates. It accepts a fairly large number of object-types and creates nice-looking, ready-to-publish outputs of their main parameters. In many cases, however, the default settings do not give us the proper numerical results, and customizing the output is not that straightforward. This is part one in a two-part series on how to customize stargazer.
+When I first encountered stargazer I already had a problem with the model outputs the package created: in cross-sectional data the observations are often of different sizes, which leads to heteroskedastic model residuals where simple standard errors are useless for measuring variable significance.">
+
+  
+  <link rel="alternate" hreflang="en-us" href="https://peterduronelly.github.io/post/robust-and-clustered-standard-errors-in-stargazer/">
+
+  
+
+
+  
+
+  
+  
+  
+  <meta name="theme-color" content="#0095eb">
+  
+
+  
+  
+  
+  
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha512-6MXa8B6uaO18Hid6blRMetEIoPqHf7Ux1tnyIQdpt9qI5OACx7C+O3IVTr98vwGnlcg0LOLa02i9Y1HpVhlfiw==" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css" integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" integrity="sha256-ygkqlh3CYSUri3LhQxzdcm0n1EQvH2Y+U5S2idbLtxs=" crossorigin="anonymous">
+
+    
+    
+    
+      
+    
+    
+      
+      
+        
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" crossorigin="anonymous">
+        
+      
+    
+
+    
+
+    
+
+  
+
+  
+  
+  <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Montserrat:400,700%7cRoboto:400,400italic,700%7cRoboto&#43;Mono">
+  
+
+  <link rel="stylesheet" href="/styles.css">
+  
+
+  
+  
+  
+
+  
+  <link rel="alternate" href="https://peterduronelly.github.io/index.xml" type="application/rss+xml" title="Tiny Little Things in Data Science">
+  <link rel="feed" href="https://peterduronelly.github.io/index.xml" type="application/rss+xml" title="Tiny Little Things in Data Science">
+  
+
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="icon" type="image/png" href="/img/icon.png">
+  <link rel="apple-touch-icon" type="image/png" href="/img/icon-192.png">
+
+  <link rel="canonical" href="https://peterduronelly.github.io/post/robust-and-clustered-standard-errors-in-stargazer/">
+
+  <meta property="twitter:card" content="summary_large_image">
+  
+  <meta property="og:site_name" content="Tiny Little Things in Data Science">
+  <meta property="og:url" content="https://peterduronelly.github.io/post/robust-and-clustered-standard-errors-in-stargazer/">
+  <meta property="og:title" content="Robust and Clustered Standard Errors in Stargazer | Tiny Little Things in Data Science">
+  <meta property="og:description" content="Stargazer is a neat tool to present model estimates. It accepts a fairly large number of object-types and creates nice-looking, ready-to-publish outputs of their main parameters. In many cases, however, the default settings do not give us the proper numerical results, and customizing the output is not that straightforward. This is part one in a two-part series on how to customize stargazer.
+When I first encountered stargazer I already had a problem with the model outputs the package created: in cross-sectional data the observations are often of different sizes, which leads to heteroskedastic model residuals where simple standard errors are useless for measuring variable significance.">
+  <meta property="og:locale" content="en-us">
+  
+  <meta property="article:published_time" content="2018-10-02T14:14:34&#43;02:00">
+  
+  <meta property="article:modified_time" content="2018-10-02T14:14:34&#43;02:00">
+  
+
+  
+
+  
+
+  <title>Robust and Clustered Standard Errors in Stargazer | Tiny Little Things in Data Science</title>
+
+</head>
+<body id="top" data-spy="scroll" data-target="#toc" data-offset="71" >
+
+<nav class="navbar navbar-default navbar-fixed-top" id="navbar-main">
+  <div class="container">
+
+    
+    <div class="navbar-header">
+      
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
+              data-target=".navbar-collapse" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      
+      <a class="navbar-brand" href="/">Tiny Little Things in Data Science</a>
+    </div>
+
+    
+    <div class="collapse navbar-collapse">
+
+      
+      
+      <ul class="nav navbar-nav navbar-right">
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#about">
+            
+            <span>Home</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#posts">
+            
+            <span>Posts</span>
+            
+          </a>
+        </li>
+
+        
+        
+
+        
+
+        
+        
+        
+          
+        
+
+        <li class="nav-item">
+          <a href="/#contact">
+            
+            <span>Contact</span>
+            
+          </a>
+        </li>
+
+        
+        
+      
+
+      
+      </ul>
+
+    </div>
+  </div>
+</nav>
+
+
+<article class="article" itemscope itemtype="http://schema.org/Article">
+
+  
+
+
+  <div class="article-container">
+    <h1 itemprop="name">Robust and Clustered Standard Errors in Stargazer</h1>
+
+    
+
+<div class="article-metadata">
+
+  
+  
+  
+  <div>
+    
+    <span itemscope itemprop="author" itemtype="http://schema.org/Person">
+      <span itemprop="name">Peter Duronelly</span>
+    </span>
+    
+  </div>
+  
+
+  <span class="article-date">
+    
+    <meta content="2018-10-02 14:14:34 &#43;0200 CEST" itemprop="datePublished">
+    <time datetime="2018-10-02 14:14:34 &#43;0200 CEST" itemprop="dateModified">
+      Oct 2, 2018
+    </time>
+  </span>
+  <span itemscope itemprop="publisher" itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="Peter Duronelly">
+  </span>
+
+  
+  <span class="middot-divider"></span>
+  <span class="article-reading-time">
+    6 min read
+  </span>
+  
+
+  
+  
+
+  
+  
+  
+  
+
+  
+  
+<div class="share-box" aria-hidden="true">
+  <ul class="share">
+    <li>
+      <a class="twitter"
+         href="https://twitter.com/intent/tweet?text=Robust%20and%20Clustered%20Standard%20Errors%20in%20Stargazer&amp;url=https%3a%2f%2fpeterduronelly.github.io%2fpost%2frobust-and-clustered-standard-errors-in-stargazer%2f"
+         target="_blank" rel="noopener">
+        <i class="fab fa-twitter"></i>
+      </a>
+    </li>
+    <li>
+      <a class="facebook"
+         href="https://www.facebook.com/sharer.php?u=https%3a%2f%2fpeterduronelly.github.io%2fpost%2frobust-and-clustered-standard-errors-in-stargazer%2f"
+         target="_blank" rel="noopener">
+        <i class="fab fa-facebook-f"></i>
+      </a>
+    </li>
+    <li>
+      <a class="linkedin"
+         href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fpeterduronelly.github.io%2fpost%2frobust-and-clustered-standard-errors-in-stargazer%2f&amp;title=Robust%20and%20Clustered%20Standard%20Errors%20in%20Stargazer"
+         target="_blank" rel="noopener">
+        <i class="fab fa-linkedin-in"></i>
+      </a>
+    </li>
+    <li>
+      <a class="weibo"
+         href="http://service.weibo.com/share/share.php?url=https%3a%2f%2fpeterduronelly.github.io%2fpost%2frobust-and-clustered-standard-errors-in-stargazer%2f&amp;title=Robust%20and%20Clustered%20Standard%20Errors%20in%20Stargazer"
+         target="_blank" rel="noopener">
+        <i class="fab fa-weibo"></i>
+      </a>
+    </li>
+    <li>
+      <a class="email"
+         href="mailto:?subject=Robust%20and%20Clustered%20Standard%20Errors%20in%20Stargazer&amp;body=https%3a%2f%2fpeterduronelly.github.io%2fpost%2frobust-and-clustered-standard-errors-in-stargazer%2f">
+        <i class="fas fa-envelope"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+  
+
+</div>
+
+
+    <div class="article-style" itemprop="articleBody">
+      
+
+<p>Stargazer is a neat tool to present model estimates. It accepts a fairly large number of object-types and creates nice-looking, ready-to-publish outputs of their main parameters. In many cases, however, the default settings do not give us the proper numerical results, and customizing the output is not that straightforward. This is part one in a two-part series on how to customize stargazer.</p>
+
+<p>When I first encountered stargazer I already had a problem with the model outputs the package created: in cross-sectional data the observations are often of different sizes, which leads to heteroskedastic model residuals where simple standard errors are useless for measuring variable significance. Heteroskedasticity requires <em>‘robust’</em> standard errors to calculate p-values, but there is no flag in stargazer to switch from simple to robust standard errors. The same problem emerges with panel models, where, for basically the same reason, <em>‘clustered’</em> standard errors need to be calculated and applied. If the output is based on the wrong errors, then the model cannot be presented with stargazer. However, I haven’t been able to find any other package which can create such a tidily formatted model output.</p>
+
+<p>The good news is that stargazer can be fed externally with the right standard errors, which then results in the proper output. This post shows you how.</p>
+
+<pre><code class="language-.r">library(wbstats) # to retrieve World Bank development data to demonstrate stargazer functionalities
+library(dplyr)
+library(data.table)
+library(plm)
+library(stargazer) # this is the package what we are interested in
+library(sandwich) # to calculate robust and clustered stanard errors
+library(pander)
+</code></pre>
+
+<p>I am using the <em>wbstats</em> package to download data from the World Bank development database. As countries are of different sizes, running a regression of any kind requires ‘non-standard’ standard errors to calculate variable significance. We will do a cross-section and a panel regression to demonstrate stargazer options.</p>
+
+<p>In a simple model I try to explain the number of patent applications in a country with real PPP GDP and population size. The goal of this exercise is not about building the right model, the regressions are for demonstrational purposes only.</p>
+
+<pre><code class="language-.r">data &lt;- wb(indicator = c(&quot;NY.GDP.MKTP.PP.KD&quot;, # WB (World Bank) code for PPP GDP per capita in 2011 $
+                         &quot;IP.PAT.RESD&quot;, # WB code for patent applications by residents
+                         &quot;SP.POP.TOTL&quot;), # WB code for population
+                       startdate = 2000, 
+                       enddate = 2015)
+
+countries &lt;- wbcountries() 
+
+data &lt;- merge(data, countries[c(&quot;iso2c&quot;, &quot;region&quot;)], 
+                          by = &quot;iso2c&quot;, all.x = TRUE)
+data &lt;- subset(subset(data, region != &quot;Aggregates&quot;))
+
+data$indicatorID[data$indicatorID == &quot;NY.GDP.MKTP.PP.KD&quot;] &lt;- &quot;GDP&quot;
+data$indicatorID[data$indicatorID == &quot;IP.PAT.RESD&quot;] &lt;- &quot;patent_applications&quot;
+data$indicatorID[data$indicatorID == &quot;SP.POP.TOTL&quot;] &lt;- &quot;population&quot;
+
+data &lt;- dcast(data, iso2c + country + date + region ~ indicatorID,  value.var = 'value')
+
+names(data)[names(data) == &quot;date&quot;] &lt;- &quot;year&quot;
+data$year &lt;- as.numeric(data$year)
+data &lt;- data %&gt;%
+  select(-iso2c, -region)
+
+data$population &lt;- data$population / 10^6 # some rescaling
+data$GDP &lt;- data$GDP / 10^9
+
+data &lt;- data[complete.cases(data),]
+</code></pre>
+
+<p>Without going into the details of the wbstat package we end up with a data frame where country and year are in columns 1 and 2, and the three other variables (GDP in USD bn, patent applications and population in millions) are in columns 3-5. (This is the default format for panels in R.) The panel is only slightly unbalanced: even if a large number of observations is missing the observations with missing values will not make much trouble. (The punbalanced() command measures how unbalanced the panel is, but this is also beyond the scope of this analysis.)</p>
+
+<p><br></p>
+
+<h2 id="robust-standard-errors">Robust Standard Errors</h2>
+
+<p>Now let’s do a simple cross sectional regression for 2011.</p>
+
+<pre><code class="language-.r">linear_regression &lt;- lm(formula = patent_applications ~ 
+                          GDP + population,
+                        data = data %&gt;% filter(year == 2011))
+</code></pre>
+
+<p>Now comes the trick! The vcov() function in the sandwich package calculates the robust standard errors that we need for coefficient testing when model residuals are heteroskedastic. Vcov gives us the variable covariance matrix, which measures co-dependencies between the variables. It&rsquo;s diagonal elements are the variances of the variables, which are used for variable importance testing. We need to extract these diagonal elements, take their square root, and feed them into <em>stargazer</em>.</p>
+
+<pre><code class="language-.r">robust_standard_errors &lt;- vcov(linear_regression, sandwich)
+robust_standard_errors &lt;- sqrt(diag(robust_standard_errors))
+</code></pre>
+
+<p>Our standard erorrs are the following.</p>
+
+<pre><code class="language-.r">df = data.frame(robust_standard_errors)
+pander(df)
+</code></pre>
+
+<p><img src="/img/05_stargazer_01_resized.jpg" alt="" /></p>
+
+<p>This is the input We can feed into <em>stargazer</em> using the <em>‘se’</em> option from the method’s parameter set.
+It is important to note that the object containing the errors should be given as a <em>‘list’</em>, even if
+we only show one model with stargazer.</p>
+
+<pre><code class="language-.r">stargazer(linear_regression, title = &quot;Linear regression&quot;, 
+          se = list(robust_standard_errors),
+          type = &quot;html&quot;, out = &quot;linear regression.html&quot;)
+</code></pre>
+
+<p>The <em>&lsquo;out&rsquo;</em> parameter in <em>stargazer</em> defines the name of the output file we create, and <em>&lsquo;type&rsquo;</em> defines the file&rsquo;s extension.
+Once we run the command we will get the following (kind of) neatly formatted output which includes our externally fed standard
+errors and the relevant t-statistics based on those standard errors.</p>
+
+<p><img src="/img/05_stargazer_02_resized.jpg" alt="" /></p>
+
+<h2 id="clustered-standard-errors">Clustered Standard Errors</h2>
+
+<p>Now let’s do two panel regressions using the whole dataset: a fixed-effects (FE) model and a
+first difference (FD) model. We will include both models in our stargazer output for which
+we need to supply two sets of standard errors. What is robust standard errors in cross sectional
+regressions is ‘clustered’ standard errors in panels. This time the vcovHC() function will take
+care of the standard errors.</p>
+
+<p>First the two panels. As I said before, model validity is not an issue here, I just want to have
+standard errors.</p>
+
+<pre><code class="language-.r">p_data = pdata.frame(data) # we need to create a 'panel data frame' for panel regressions
+
+fe_regression &lt;- plm(patent_applications ~ GDP + population, # FE model
+                     data = p_data,
+                     model = &quot;within&quot;,
+                     effect = &quot;twoways&quot;)
+
+fd_regression &lt;- plm(diff(patent_applications) ~ diff(GDP, lag = 2) + # FD model
+                       diff(diff(GDP), lag = c(0:1)) +
+                       diff(population, lag = 2) + diff(diff(population), lag = c(0:1)),
+                     data = p_data,
+                     model = 'pooling')
+</code></pre>
+
+<p>From these two models we extract the clustered standard errors the same way, but now with the
+vcocHC() function which handles clustered errors in panel models.</p>
+
+<pre><code class="language-.r">clustered_standard_errors_fe &lt;- vcovHC(fe_regression, type = &quot;HC0&quot;, cluster = &quot;group&quot;)
+clustered_standard_errors_fe &lt;- sqrt(diag(clustered_standard_errors_fe))
+
+clustered_standard_errors_fd &lt;- vcovHC(fd_regression, type = &quot;HC0&quot;, cluster = &quot;group&quot;)
+clustered_standard_errors_fd &lt;- sqrt(diag(clustered_standard_errors_fd))
+</code></pre>
+
+<p>Once we have the standard errors ready, we add them as stargazer parameters. Note, that they are given
+as lists again.</p>
+
+<pre><code class="language-.r">stargazer(fe_regression, fd_regression, title = &quot;Panel regressions&quot;, 
+          se = list(clustered_standard_errors_fe, clustered_standard_errors_fd),
+          type = &quot;html&quot;, out = &quot;panel regression.html&quot;)
+</code></pre>
+
+<p>Now the <em>stargazer</em> output looks like this.</p>
+
+<p><img src="/img/05_stargazer_03_resized.jpg" alt="" /></p>
+
+<p>We have everything we need in our model output, and <em>stargazer</em> uses the proper standard
+error set for both models to coefficient testing. We even have more than we really need,
+and the labels are kind of messy. There are more options to customize <em>stargazer</em> and make
+it look better, but it is the subject of the other post on <em>stargazer</em>.</p>
+
+<p>Codes at the <a href="https://github.com/peterduronelly/blogcodes/blob/master/05-Robust-And-Clustered-Standard-Errors-In-Stargazer.R" target="_blank">usual place</a>.</p>
+
+    </div>
+
+    
+
+
+<div class="article-tags">
+  
+  <a class="label label-default" href="https://peterduronelly.github.io/tags/r/">R</a>
+  
+  <a class="label label-default" href="https://peterduronelly.github.io/tags/stargazer/">stargazer</a>
+  
+  <a class="label label-default" href="https://peterduronelly.github.io/tags/modeling/">modeling</a>
+  
+</div>
+
+
+
+
+    
+    
+    <div class="article-widget">
+      <div class="hr-light"></div>
+      <h3>Related</h3>
+      <ul>
+        
+        <li><a href="/post/text-complexity-analysis-of-beatles-lyrics-with-r/">Text Complexity Analysis of Beatles Lyrics With R</a></li>
+        
+      </ul>
+    </div>
+    
+
+    
+
+    
+
+
+  </div>
+</article>
+
+<footer class="site-footer">
+  <div class="container">
+
+    
+
+    <p class="powered-by">
+
+      &copy; 2018 &middot; 
+
+      Powered by the
+      <a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener">Academic theme</a> for
+      <a href="https://gohugo.io" target="_blank" rel="noopener">Hugo</a>.
+
+      <span class="pull-right" aria-hidden="true">
+        <a href="#" id="back_to_top">
+          <span class="button_icon">
+            <i class="fas fa-chevron-up fa-2x"></i>
+          </span>
+        </a>
+      </span>
+
+    </p>
+  </div>
+</footer>
+
+
+<div id="modal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close btn-large" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Cite</h4>
+      </div>
+      <div>
+        <pre><code class="modal-body tex"></code></pre>
+      </div>
+      <div class="modal-footer">
+        <a class="btn btn-primary btn-outline js-copy-cite" href="#" target="_blank">
+          <i class="fas fa-copy"></i> Copy
+        </a>
+        <a class="btn btn-primary btn-outline js-download-cite" href="#" target="_blank">
+          <i class="fas fa-download"></i> Download
+        </a>
+        <div id="modal-error"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+    
+
+    
+    
+    
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha512-3P8rXCuGJdNZOnUx/03c1jOTnMn3rP63nBip5gOP2qmUh5YAdVAvFZ1E+QLZZbC1rtMrQb+mah3AfYW11RUrWA==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.3/imagesloaded.pkgd.min.js" integrity="sha512-umsR78NN0D23AzgoZ11K7raBD+R6hqKojyBZs1w8WvYlsI+QuKRGBx3LFCwhatzBunCjDuJpDHwxD13sLMbpRA==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha512-iztkobsvnjKfAtTNdHkGVjAYTrrtlC7mGp/54c40wowO7LhURYl3gVzzcEqGl/qKXQltJ2HwMrdLcNUdo+N/RQ==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.4/isotope.pkgd.min.js" integrity="sha512-VDBOIlDbuC4VWxGJNmuFRQ0Li0SKkDpmGyuhAG5LTDLd/dJ/S0WMVxriR2Y+CyPL5gzjpN4f/6iqWVBJlht0tQ==" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" integrity="sha256-X5PoE3KU5l+JcX+w09p/wHl9AzK333C4hJ2I9S5mD4M=" crossorigin="anonymous"></script>
+
+      
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
+        
+      
+
+      
+      
+    
+
+    <script src="/js/hugo-academic.js"></script>
+    
+
+    
+    
+
+    
+    
+    
+
+    
+    
+    <script>hljs.initHighlightingOnLoad();</script>
+    
+
+    
+    
+    <script>
+      const search_index_filename = "/index.json";
+      const i18n = {
+        'placeholder': "Search...",
+        'no_results': "No results found"
+      };
+      const content_type = {
+        'post': "Posts",
+        'project': "Projects",
+        'publication' : "Publications",
+        'talk' : "Talks"
+        };
+    </script>
+    
+
+    
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js" integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+    <script src="/js/search.js"></script>
+    
+
+    
+    
+
+  </body>
+</html>
+
