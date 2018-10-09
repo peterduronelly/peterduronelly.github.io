@@ -11,6 +11,138 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Comparing Beatles and Bob Dylan</title>
+      <link>https://peterduronelly.github.io/post/comparing-beatles-and-bob-dylan/</link>
+      <pubDate>Tue, 09 Oct 2018 14:35:15 +0200</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/comparing-beatles-and-bob-dylan/</guid>
+      <description>&lt;p&gt;In a &lt;a href=&#34;https://peterduronelly.github.io/post/text-complexity-analysis-of-beatles-lyrics-with-r/&#34; target=&#34;_blank&#34;&gt;previous post&lt;/a&gt; I showed how to use data science tools to find hidden features in unstructured text and analyzed how the complexity of the lyrics of Beatles songs changed over time. In this post I do a little follow-up and compare complete works of The Beatles with that of two others using the same methodology and metrics. Comparing Beatles with other musicians may help put the original numbers into the perspective.&lt;/p&gt;
+
+&lt;p&gt;I downloaded lyrics from the progressive rock band ‘The Alan Parsons Project’ and Nobel laureate Bob Dylan. Alan Parsons is an audio engineer, musician and song writer, who was one of the engineering architects of The Beatles’ Abbey Road and Let It Be albums, and Pink Floyd’s Dark Side Of The Moon LP. He later created an unusual formation consisting of him and his composer partner Eric Wolfson as permanent group members, supplemented by a group of session musicians who played on their albums with more or less regularity. Their music was of a more intellectual nature with a more equal focus on lyrics and melody.&lt;/p&gt;
+
+&lt;p&gt;Bob Dylan can now be equally considered both as a poet and a musician, and comparing him and The Alan Parson Project to The Beatles makes an interesting text analysis. As a side note: I was also entertaining the idea to include Iron Maiden in the comparison, but the excessive work of Bruce Dickinson &amp;amp; Co would have made the already long download even longer, so I stayed with my original idea. (It takes quite a bit of time to download lyrics with geniusR.)&lt;/p&gt;
+
+&lt;p&gt;First, I did the cosine similarity comparison, but this time on the artists and not on the individual albums. According to the cosine matrix Bob Dylan is equally different from The Beatles and The Alan Parsons Project: their cosine is 0.67 and 0.62, respectively. In a two-dimensional space this would be an angle of approximately 50 degrees. The cosine between Beatles and The Alan Parsons Project, however, is only 0.41, which is ‘equivalent’ to a two-dimensional angle of 65 degrees. It looks, that, despite their partially shared history, The Beatles and Alan Parsons have less in common than any of them with Bob Dylan.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;albums &amp;lt;-  tibble(
+  artist = c(
+    rep(&amp;quot;The Beatles&amp;quot;, 13),
+    rep(&amp;quot;Bob Dylan&amp;quot;, 36),
+    rep(&amp;quot;The Alan Parsons Project&amp;quot;, 10)
+  )
+    ,
+  album = c(
+    &amp;quot;Please Please Me&amp;quot;, &amp;quot;With The Beatles&amp;quot;, &amp;quot;A Hard Day s Night&amp;quot;,
+    &amp;quot;Beatles For Sale&amp;quot;, &amp;quot;Help&amp;quot;, &amp;quot;Rubber Soul&amp;quot;,
+    &amp;quot;Revolver&amp;quot;, &amp;quot;Sgt Pepper s Lonely Hearts Club Band&amp;quot;, &amp;quot;Magical Mystery Tour&amp;quot;,
+    &amp;quot;The Beatles The White Album&amp;quot;, &amp;quot;Yellow Submarine&amp;quot;, &amp;quot;Abbey Road&amp;quot;,
+    &amp;quot;Let It Be&amp;quot;,
+    &amp;quot;Bob dylan&amp;quot;, &amp;quot;The freewheelin bob dylan&amp;quot;, &amp;quot;Another side of bob dylan&amp;quot;,
+    &amp;quot;The times they are a changin&amp;quot;, &amp;quot;Bringing it all back home&amp;quot;, &amp;quot;Highway 61 revisited&amp;quot;,
+    &amp;quot;Blonde on blonde&amp;quot;, &amp;quot;John wesley harding&amp;quot;, &amp;quot;Nashville skyline&amp;quot;,
+    &amp;quot;New morning&amp;quot;, &amp;quot;Self portrait&amp;quot;, &amp;quot;Pat garrett billy the kid&amp;quot;,
+    &amp;quot;Triplicate&amp;quot;, &amp;quot;Blood on the tracks&amp;quot;, &amp;quot;The basement tapes&amp;quot;,
+    &amp;quot;Desire&amp;quot;, &amp;quot;Street legal&amp;quot;, &amp;quot;Slow train coming&amp;quot;,
+    &amp;quot;Saved&amp;quot;, &amp;quot;Shot of love&amp;quot;, &amp;quot;Infidels&amp;quot;,
+    &amp;quot;Empire burlesque&amp;quot;, &amp;quot;Knocked out loaded&amp;quot;, &amp;quot;Down in the groove&amp;quot;,
+    &amp;quot;Oh mercy&amp;quot;, &amp;quot;Under the red sky&amp;quot;, &amp;quot;Good as i been to you&amp;quot;,
+    &amp;quot;World gone wrong&amp;quot;, &amp;quot;Time out of mind&amp;quot;, &amp;quot;Love and theft&amp;quot;,
+    &amp;quot;Modern times&amp;quot;, &amp;quot;Together through life&amp;quot;, &amp;quot;Christmas in the heart&amp;quot;,
+    &amp;quot;Tempest&amp;quot;, &amp;quot;Shadows in the night&amp;quot;, &amp;quot;Fallen angels&amp;quot;,
+    &amp;quot;Tales of mystery and imagination edgar allan poe&amp;quot;, &amp;quot;I robot&amp;quot;, &amp;quot;Pyramid&amp;quot;,
+    &amp;quot;Eve&amp;quot;, &amp;quot;The turn of a friendly card&amp;quot;, &amp;quot;Eye in the sky&amp;quot;, 
+    &amp;quot;Ammonia avenue&amp;quot;, &amp;quot;Vulture culture&amp;quot;, &amp;quot;Stereotomy&amp;quot;,
+    &amp;quot;Gaudi&amp;quot;
+  )
+)
+
+all_lyrics &amp;lt;- album_lyrics &amp;lt;- albums %&amp;gt;% 
+  mutate(tracks = map2(artist, album, genius_album))
+
+full_lyrics &amp;lt;- all_lyrics %&amp;gt;% 
+  unnest(tracks) %&amp;gt;%
+  arrange(desc(artist))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;tidy_lyrics &amp;lt;- full_lyrics %&amp;gt;%
+  unnest_tokens(word, text) %&amp;gt;%
+  filter(nchar(word)&amp;gt;2)%&amp;gt;%
+  anti_join(stop_words) %&amp;gt;%
+  group_by(artist) %&amp;gt;%
+  count(word, sort = TRUE) %&amp;gt;%
+  ungroup()
+
+total_full_words &amp;lt;- tidy_lyrics %&amp;gt;% 
+  group_by(artist) %&amp;gt;% 
+  summarize(total = sum(n))
+
+tidy_lyrics &amp;lt;- left_join(tidy_lyrics, total_full_words)
+
+tidy_lyrics &amp;lt;- tidy_lyrics %&amp;gt;%
+  mutate(freq = n / total)
+
+full_cos &amp;lt;- tidy_lyrics %&amp;gt;%
+  select(artist, word, freq)
+
+full_cos_w &amp;lt;- spread(full_cos, key = artist, value = freq)
+
+full_cos_w[is.na(full_cos_w)] &amp;lt;- 0
+
+full_cos_w_matrix &amp;lt;- data.matrix(full_cos_w, rownames.force = NA)
+
+full_cos_w_matrix &amp;lt;- full_cos_w_matrix[, -1]
+
+cosine_matrix &amp;lt;- cosine(full_cos_w_matrix)
+
+cm &amp;lt;- data.frame(cosine_matrix)
+
+pander(cm, caption = &amp;quot;Cosine similarity matrix&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/06_beatles_dylan_01.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Next, I turned to the text complexity measures. Here I used the core album lists, which had 10 albums for The Alan Parsons Project and 36 (!) for Bob Dylan. Just as in the previous case, stop words are also included in the calculations.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-.r&#34;&gt;artists &amp;lt;- full_lyrics %&amp;gt;%
+  distinct(artist)
+  
+full_text_complexity &amp;lt;- data.table(artist = character(),
+                              mGunningFog = numeric(),
+                              mARI = numeric())
+
+for(i in 1:nrow(artists)){
+  artista &amp;lt;- artists[[1]][i]
+  l &amp;lt;-  list(artista)
+  temp_lyr &amp;lt;- full_lyrics %&amp;gt;%
+    filter(artist == artista) %&amp;gt;%
+    distinct(text)
+  rwstat &amp;lt;- readability_word_stats(temp_lyr[,1])
+  l &amp;lt;-  list.append(l, 0.4*(rwstat$n.words/nrow(temp_lyr)) +
+                      100*(rwstat$n.complexes/rwstat$n.words))
+  l &amp;lt;- list.append(l, 5.89*(rwstat$n.chars/rwstat$n.words) -
+                     0.3*(nrow(temp_lyr)/rwstat$n.words) - 15.8)
+  full_text_complexity &amp;lt;- rbind(full_text_complexity, l)
+}
+
+ggplot(data = full_text_complexity, aes(mARI, mGunningFog)) + 
+  geom_point(color = &amp;quot;darkblue&amp;quot;) +
+  geom_text(aes(x = mARI, y = mGunningFog, label = artist), hjust=1, vjust=-0.5) + 
+  theme_bw() + labs(title = &amp;quot;Text complexity comparison&amp;quot;) + 
+  theme(plot.title = element_text(size = rel(1.25)))  +
+  xlim(5.5,7.5) + ylim(5,7)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/06_beatles_dylan_02.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Beatles fares quite poorly compared to both Bob Dylan and The Alan Parsons Project: the group&amp;rsquo;s lyrics is less complex &lt;strong&gt;on average&lt;/strong&gt; than that of the other two musicians. But if we go back to the previous post, we&amp;rsquo;ll see that on an individual album basis the Beatles has nothing to feel bad about. Their late albums (Abbey Road, Let It Be and Sgt. Pepper) meet Bob Dylan or Alan Parsons standards.&lt;/p&gt;
+
+&lt;p&gt;This does not imply that Paul McCartney should have been given the Nobel Prize as these complexity metrics are only one kind of the many measures of text quality. Nevertheless, it is still interesting to see the numbers and it is a lot of fun to put together an analysis of this kind.&lt;/p&gt;
+
+&lt;p&gt;Codes are at the &lt;a href=&#34;https://github.com/peterduronelly/blogcodes/blob/master/06-Comparing-Beatles-And-Bob-Dylan.R&#34; target=&#34;_blank&#34;&gt;usual place&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Robust and Clustered Standard Errors in Stargazer</title>
       <link>https://peterduronelly.github.io/post/robust-and-clustered-standard-errors-in-stargazer/</link>
       <pubDate>Tue, 02 Oct 2018 14:14:34 +0200</pubDate>
