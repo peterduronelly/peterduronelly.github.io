@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ML on Tiny Little Things in Data Science</title>
+    <link>https://peterduronelly.github.io/tags/ml/</link>
+    <description>Recent content in ML on Tiny Little Things in Data Science</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>&amp;copy; 2018</copyright>
+    <lastBuildDate>Tue, 20 Nov 2018 15:45:04 +0100</lastBuildDate>
+    
+	<atom:link href="https://peterduronelly.github.io/tags/ml/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Train Test Splitting Time Series Data</title>
+      <link>https://peterduronelly.github.io/post/train-test-splitting-time-series-data/</link>
+      <pubDate>Tue, 20 Nov 2018 15:45:04 +0100</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/train-test-splitting-time-series-data/</guid>
+      <description>Machine learning is not the ideal tool for time series forecasting for a number of reasons, but, as I will demonstrate it in a future post, limited models can be built for short-term forecasting exercises. One aspect of time series data is, however, that you can’t split your observations randomly into train and test subsets: you train on an early interval and test on a later one. Standard ML libraries, such as scikit-learn, don’t provide a tool for that.</description>
+    </item>
+    
+  </channel>
+</rss>

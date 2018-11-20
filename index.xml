@@ -11,6 +11,142 @@
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
+      <title>Train Test Splitting Time Series Data</title>
+      <link>https://peterduronelly.github.io/post/train-test-splitting-time-series-data/</link>
+      <pubDate>Tue, 20 Nov 2018 15:45:04 +0100</pubDate>
+      
+      <guid>https://peterduronelly.github.io/post/train-test-splitting-time-series-data/</guid>
+      <description>&lt;p&gt;Machine learning is not the ideal tool for time series forecasting for a number of reasons, but, as I will demonstrate it in a future post, limited models can be built for short-term forecasting exercises. One aspect of time series data is, however, that you can’t split your observations randomly into train and test subsets: you train on an early interval and test on a later one. Standard ML libraries, such as scikit-learn, don’t provide a tool for that. This post will show how we can split time series data for a machine learning model.&lt;/p&gt;
+
+&lt;p&gt;Splitting data between training and testing for time series is different from cross-sectional data as the underlying population is not a set of different individual units but the same observable thing(s) in different time periods. The model is trained on an early part of the observed period and we want to test it on the more recent interval. This assumes a few things, first and foremost the persistence of the patterns over time, but this is not only critical for ML modeling. Standard time series analysis methods, let them be stochastic or non-stochastic, also assume this kind of persistence.&lt;/p&gt;
+
+&lt;p&gt;I am planning a longer post on demonstrating the viability of ML in time series predictions, but before that I’d like to show a simple solution to the train-test-split problem when the split cannot happen randomly. I am using a set of macroeconomic variables to forecast the development of Case-Shiller Home Price Index, where I also want to illustrate the importance of domain knowledge in the modeling exercise.&lt;/p&gt;
+
+&lt;p&gt;The data is coming from &lt;a href=&#34;https://fred.stlouisfed.org/&#34; target=&#34;_blank&#34;&gt;FRED&lt;/a&gt;, the St. Louis Fed Economic Database in a csv file. Since feature engineering is best done in pandas, the input object for the train-tests-split method is also a pandas data frame. The method’s extra output beyond the subsets is the list of feature names.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import numpy as np
+import pandas as pd
+import datetime
+
+hp = pd.read_csv(&amp;quot;house_price_changes.csv&amp;quot;)
+hp.head()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/07_train_test_split_01.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The first column should be the date column, but the csv downloaded from FRED does not have either the proper name or the proper format. Looking at the schema tells us that we have 32 variables, 119 periods and our data starts with an unnamed ‘non-null object’, which should be the date column.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;hp.info()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/07_train_test_split_02.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Using the datatime.date() function we can transform the uninterpretable mess into a neat date variable.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;hp.rename(columns={&#39;Unnamed: 0&#39;: &#39;date&#39;}, inplace=True)
+hp[&#39;date&#39;] = pd.to_datetime(hp[&#39;date&#39;])
+hp.info()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/07_train_test_split_06.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The easiest way to split a dataframe by column values is using a mask. For instance if we want to split our data for dates before and after (not before) January 1st, 2013 we can simply say:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;mask = hp[&#39;date&#39;] &amp;lt; datetime.date(2013,1,1)
+hp_train = hp[mask]
+hp_test = hp[-mask]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To get things organized we’d better write a function to train-test-split our dataframe and to get the feature names accordingly. We need the following steps:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Split to train and test.&lt;/li&gt;
+&lt;li&gt;Drop the date column if it is not a feature in the model.&lt;/li&gt;
+&lt;li&gt;Split both train and test to X (features) and y (target).&lt;/li&gt;
+&lt;li&gt;Get the list of column names.&lt;/li&gt;
+&lt;li&gt;Convert the two X and y dataframes to arrays.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def train_test_split_timeseries(input_dataframe, target, timecolumn, year, month, day, dropdates = True):
+    &amp;quot;&amp;quot;&amp;quot;
+    The function splits a dataframe containing a time series into non-random train and test subsets. 
+    The last observation in the train data is the latest datetime value in the data which precedes 
+    the breakpoint given by the (year, month, day) value. The first observation in the test data is the 
+    breakpoint given by the (year, month, day) value or the first observation afterwards.
+    
+    Parameters:
+        input_dataframe (Pandas dataframe): The data file with the time series data.
+        target (string): Name of the target variable in the input dataframe.
+        timecolumn (string): The name of the time colummn for splitting the dataframe (usually a date column).
+        year, month, day (int): The year, month, day components of the breakpoint.
+        dropdates (boolean): Whether or not to drop the date column to produce the train/test data. Defaults to True. 
+    
+    Returns: 
+        X_train (array): A numpy array of training input data.
+        y_train (array): A numpy array of training target data.
+        X_test (array): A numpy array of test input data.
+        y_test (array): A numpy array of test target data.
+        feature_names (array): A list of feature names used in the input matrix.
+    &amp;quot;&amp;quot;&amp;quot;
+    
+    # Split to train and test periods.
+    model_df = input_dataframe
+    target = target
+    timecolumn = timecolumn
+    mask = model_df[timecolumn] &amp;lt; datetime.date(year,month,day)
+    model_df_train = model_df[mask]
+    model_df_test = model_df[-mask]
+    
+    # Drop date column if dropdates = True
+    if dropdates:
+        model_df_train = model_df_train.drop([&#39;date&#39;], axis=1)
+        model_df_test = model_df_test.drop([&#39;date&#39;], axis=1)
+    
+    # Split both train and test to X (input) and y (target)
+    X_train = model_df_train.drop([target], axis=1)
+    y_train = model_df_train[target]
+    
+    X_test = model_df_test.drop([target], axis=1)
+    y_test = model_df_test[target]
+    
+    # Get column names for variable importance
+    feature_names = list(X_train)
+    
+    # Convert X_train, X_test, y_train, y_test to numpy arrays
+    X_train = X_train.as_matrix()
+    X_test = X_test.as_matrix()
+    y_train = y_train.as_matrix()
+    y_test = y_test.as_matrix()
+    
+    
+    return X_train, y_train, X_test, y_test, feature_names
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We can now put the function in use. In this particular exercise the target variable is the quarterly change of the Case Shiller Home Price Index (&amp;lsquo;Case_Shiller_HPI_chg&amp;rsquo;), the last period in the train set is Q4 2012, and the first period in the test set is Q1 2013.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;X_train, y_train, X_test, y_test, feature_names = train_test_split_timeseries(hp, &#39;Case_Shiller_HPI_chg&#39;, &#39;date&#39;, 2013, 1,1)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When applying the function we get the following output objects.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;print(&#39;Feature_names&#39;)
+print(feature_names)
+print()
+print(&amp;quot;X_train type:&amp;quot;, type(X_train), &amp;quot;, shape:&amp;quot;, X_train.shape)
+print(&amp;quot;y_train type:&amp;quot;, type(y_train), &amp;quot;, shape:&amp;quot;, y_train.shape)
+print(&amp;quot;X_test type:&amp;quot;, type(X_test), &amp;quot;, shape:&amp;quot;, X_test.shape)
+print(&amp;quot;y_test type:&amp;quot;, type(y_test), &amp;quot;, shape:&amp;quot;, y_test.shape)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://peterduronelly.github.io/img/07_train_test_split_05.jpg&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now we have our train and test subsets for time series forecasting. The model will be trained on the first interval. The patterns learned on this interval will then be projected to the second interval to test the model. This is what I will show in the next post.&lt;/p&gt;
+
+&lt;p&gt;Codes are at the &lt;a href=&#34;https://github.com/peterduronelly/blogcodes/blob/master/07_Train_Test_Splitting_Time_Series_Data.ipynb&#34; target=&#34;_blank&#34;&gt;usual place&lt;/a&gt;.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Comparing Beatles and Bob Dylan</title>
       <link>https://peterduronelly.github.io/post/comparing-beatles-and-bob-dylan/</link>
       <pubDate>Tue, 09 Oct 2018 14:35:15 +0200</pubDate>
